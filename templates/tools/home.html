@@ -1,13 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}全民效率神器 | 让每个人都能轻松提效{% endblock %}
+{% block title %}全民效率神器 - 2026最新AI工具导航_免费AI工具推荐_1000+效率神器精选库{% endblock %}
 
 {% block hero %}
 <section class="hero">
     <div class="container">
         <div class="hero-content">
-            <h1>🚀 全民效率神器</h1>
-            <p>精选全球顶尖AI工具，让每个人都能轻松提效<br>无论工作、学习还是生活，这里都有你需要的神器</p>
+            <h1>💎 发现改变人生的AI神器</h1>
+            <p>别再浪费时间搜索了！这里汇聚全球最强AI工具<br>
+            <strong style="color: #667eea; font-size: 1.1em;">一个网站 = 1000+ 效率工具 | 每天为你节省3小时</strong><br>
+            从写作到编程，从设计到数据分析，你想要的这里全都有</p>
             <div class="hero-stats">
                 <div class="stat-item">
                     <div class="stat-number">{{ tool_count }}+</div>
@@ -18,22 +20,101 @@
                     <div class="stat-label">工具分类</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">24h</div>
-                    <div class="stat-label">持续更新</div>
+                    <div class="stat-number">每日更新</div>
+                    <div class="stat-label">{{ today|date:"Y-m-d" }}</div>
                 </div>
             </div>
+            <form method="get" action="{% url 'home' %}" style="margin-top: 32px;">
+                <div style="display: flex; gap: 12px; max-width: 600px; margin: 0 auto;">
+                    <input type="text" name="q" placeholder="搜索工具名称或描述..." value="{{ search_query }}"
+                           style="flex: 1; padding: 12px 20px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
+                    <button type="submit" style="padding: 12px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600;">
+                        🔍 搜索
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </section>
 {% endblock %}
 
 {% block content %}
+{% if daily_tool %}
+<section style="margin-bottom: 48px;">
+    <div style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 16px; padding: 32px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+        <div style="position: relative; z-index: 1;">
+            <h2 style="color: white; font-size: 1.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 2rem;">💎</span> 今日推荐工具
+            </h2>
+            <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px;">每天为你精选一款优质工具，明天再来看看新推荐！</p>
+            <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 24px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;">
+                <div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <span class="badge badge-category">{{ daily_tool.category.name }}</span>
+                    </div>
+                    <h3 style="font-size: 1.5rem; color: var(--gray-900); margin-bottom: 8px;">{{ daily_tool.name }}</h3>
+                    <p style="color: var(--gray-600); line-height: 1.6;">{{ daily_tool.short_description }}</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="{% url 'tool_detail' daily_tool.slug %}" style="padding: 12px 24px; background: var(--gradient-2); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; white-space: nowrap;">查看详情</a>
+                    <a href="{{ daily_tool.website_url }}" target="_blank" style="padding: 12px 24px; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; white-space: nowrap;">访问官网</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if search_query %}
+<section style="margin-bottom: 48px;">
+    <div class="section-header">
+        <h2 class="section-title">
+            <span class="icon">🔍</span>
+            搜索结果：{{ search_query }}
+        </h2>
+        <span style="color: var(--gray-500);">找到 {{ search_results.count }} 个工具</span>
+    </div>
+    {% if search_results %}
+    <div class="tool-grid">
+        {% for tool in search_results %}
+        <div class="tool-card">
+            <div class="card-header">
+                <div class="card-badges">
+                    <span class="badge badge-category">{{ tool.category.name }}</span>
+                    {% if tool.is_featured %}
+                    <span class="badge badge-featured">精选</span>
+                    {% endif %}
+                </div>
+            </div>
+            <h3>{{ tool.name }}</h3>
+            <p class="description">{{ tool.short_description }}</p>
+            <div class="card-footer">
+                <a href="{% url 'tool_detail' tool.slug %}" class="card-link">
+                    查看详情 <span>→</span>
+                </a>
+                <a href="{{ tool.website_url }}" target="_blank" rel="noopener" class="external-link">
+                    访问 ↗
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--gray-500); text-align: center; padding: 48px;">
+        未找到相关工具，请尝试其他关键词
+    </p>
+    {% endif %}
+</section>
+{% endif %}
+
 <!-- Bookmark CTA -->
 <div class="bookmark-cta">
-    <h3>⭐ 收藏本站，效率翻倍</h3>
-    <p>按 Ctrl+D (Mac: Cmd+D) 立即收藏，随时查阅最新工具</p>
+    <h3>⚡ 立即收藏，终身受益</h3>
+    <p>每周新增数个优质工具或免费赠送API，错过就是损失<br>
+    <strong>按 Ctrl+D (Mac: Cmd+D) 一键收藏，让效率神器随时在手</strong></p>
     <a href="javascript:void(0);" class="bookmark-btn" onclick="alert('按 Ctrl+D 或 Cmd+D 收藏本页！')">
-        📌 一键收藏
+        🔖 马上收藏（免费）
     </a>
 </div>
 
@@ -109,6 +190,38 @@
     </div>
 </section>
 
+<section style="margin-bottom: 48px;">
+    <div class="section-header">
+        <h2 class="section-title">
+            <span class="icon">🔥</span>
+            热门工具
+        </h2>
+        <a href="{% url 'tool_list' %}" class="view-all">查看全部 →</a>
+    </div>
+    <div class="tool-grid">
+        {% for tool in hot_tools %}
+        <div class="tool-card">
+            <div class="card-header">
+                <div class="card-badges">
+                    <span class="badge badge-category">{{ tool.category.name }}</span>
+                    <span class="badge" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%); color: #ef4444;">🔥 {{ tool.view_count }} 浏览</span>
+                </div>
+            </div>
+            <h3>{{ tool.name }}</h3>
+            <p class="description">{{ tool.short_description }}</p>
+            <div class="card-footer">
+                <a href="{% url 'tool_detail' tool.slug %}" class="card-link">
+                    查看详情 <span>→</span>
+                </a>
+                <a href="{{ tool.website_url }}" target="_blank" rel="noopener" class="external-link">
+                    访问 ↗
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
 <!-- Category Overview -->
 <section>
     <div class="section-header">
@@ -129,10 +242,11 @@
 
 <!-- Second Bookmark CTA -->
 <div class="bookmark-cta" style="margin-top: 48px;">
-    <h3>💡 发现更多宝藏工具</h3>
-    <p>我们每周更新精选工具，收藏本站不错过任何效率神器</p>
+    <h3>🎁 还没收藏？你将错过这些</h3>
+    <p>✓ 每周50+新工具第一时间获取 ✓ 独家工具评测和使用技巧 ✓ 永久免费访问<br>
+    <strong>聪明人都已经收藏了，你还在等什么？</strong></p>
     <a href="{% url 'tool_list' %}" class="bookmark-btn">
-        🔍 浏览全部工具
+        🚀 立即探索全部工具
     </a>
 </div>
 {% endblock %}

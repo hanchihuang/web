@@ -1,6 +1,60 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tool.name }} - 工具资源聚合网站{% endblock %}
+{% block title %}{{ tool.name }} - {{ tool.short_description }} | 全民效率神器{% endblock %}
+
+{% block meta_description %}{{ tool.short_description }} - {{ tool.full_description|truncatewords:30 }}{% endblock %}
+
+{% block meta_keywords %}{{ tool.name }},{{ tool.category.name }},AI工具,效率工具,{{ tool.name }}官网,{{ tool.name }}使用教程{% endblock %}
+
+{% block og_title %}{{ tool.name }} - {{ tool.short_description }}{% endblock %}
+{% block og_description %}{{ tool.short_description }}{% endblock %}
+
+{% block twitter_title %}{{ tool.name }} - {{ tool.short_description }}{% endblock %}
+{% block twitter_description %}{{ tool.short_description }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "{{ tool.name }}",
+  "description": "{{ tool.short_description }}",
+  "url": "https://ai-tool.indevs.in{% url 'tool_detail' tool.slug %}",
+  "applicationCategory": "{{ tool.category.name }}",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.5",
+    "ratingCount": "{{ tool.view_count }}"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [{
+    "@type": "ListItem",
+    "position": 1,
+    "name": "首页",
+    "item": "https://ai-tool.indevs.in"
+  },{
+    "@type": "ListItem",
+    "position": 2,
+    "name": "{{ tool.category.name }}",
+    "item": "https://ai-tool.indevs.in{% url 'tool_list' %}?category={{ tool.category.slug }}"
+  },{
+    "@type": "ListItem",
+    "position": 3,
+    "name": "{{ tool.name }}"
+  }]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div style="margin-bottom: 2rem;">
@@ -30,6 +84,131 @@
     <div style="border-top: 2px solid #ecf0f1; padding-top: 2rem;">
         <h2 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1.5rem;">详细介绍</h2>
         <div style="color: #555; line-height: 1.8; white-space: pre-wrap;">{{ tool.full_description }}</div>
+    </div>
+
+    <div style="border-top: 2px solid #ecf0f1; margin-top: 2rem; padding-top: 1.5rem;">
+        <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1.2rem;">📢 分享给朋友</h3>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button onclick="shareToWeChat()" style="padding: 10px 20px; background: #07c160; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">微信分享</button>
+            <a href="https://service.weibo.com/share/share.php?url=https://ai-tool.indevs.in{% url 'tool_detail' tool.slug %}&title={{ tool.name }} - {{ tool.short_description }}" target="_blank" style="padding: 10px 20px; background: #e6162d; color: white; border: none; border-radius: 6px; text-decoration: none; font-weight: 500;">微博分享</a>
+            <a href="https://twitter.com/intent/tweet?url=https://ai-tool.indevs.in{% url 'tool_detail' tool.slug %}&text={{ tool.name }}" target="_blank" style="padding: 10px 20px; background: #1da1f2; color: white; border: none; border-radius: 6px; text-decoration: none; font-weight: 500;">Twitter分享</a>
+            <button onclick="copyLink()" style="padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">复制链接</button>
+        </div>
+    </div>
+
+    <div style="border-top: 2px solid #ecf0f1; margin-top: 2rem; padding-top: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 2rem; color: white;">
+        <h2 style="color: white; margin-bottom: 1.5rem; font-size: 1.8rem; text-align: center; font-weight: bold;">🎁 限时福利活动</h2>
+
+        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; backdrop-filter: blur(10px);">
+            <h3 style="color: #ffd700; margin-bottom: 1rem; font-size: 1.3rem;">💎 知识星球专属福利</h3>
+            <p style="line-height: 1.8; margin-bottom: 1rem;">
+                <strong style="color: #ffd700;">2月7号之后</strong>加入「<a href="https://t.zsxq.com/Fed8e" target="_blank" style="color: #ffd700; text-decoration: underline;">财富自由之路</a>」知识星球（星球票价199）的朋友，加微信 <strong style="color: #ffd700;">a13479004101</strong> 或 <strong style="color: #ffd700;">dreamsjtuai</strong> 领取：
+            </p>
+            <ul style="line-height: 2; margin-left: 1.5rem; list-style: none;">
+                <li style="margin-bottom: 0.5rem;">✅ 一年的2核2G VPS（价值200-800元）</li>
+                <li style="margin-bottom: 0.5rem;">✅ 永久免费下载知网、万方、维普等学术论文</li>
+                <li style="margin-bottom: 0.5rem;">✅ 无限使用 Opus 4.6 的多种方法</li>
+            </ul>
+            <p style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.15); border-radius: 6px; border-left: 4px solid #ffd700;">
+                💰 <strong>单独购买VPS：</strong>2核2G VPS 一年仅需100元<br>
+                📞 <strong>联系微信：</strong>a13479004101
+            </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; backdrop-filter: blur(10px);">
+            <h3 style="color: #ffd700; margin-bottom: 1rem; font-size: 1.3rem;">🎯 星球核心福利（后续会不断加码）</h3>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #fff; margin-bottom: 0.8rem; font-size: 1.1rem;">1️⃣ 核心技术资源与源码</h4>
+                <ul style="line-height: 1.9; margin-left: 1.5rem; list-style: disc; color: rgba(255,255,255,0.95);">
+                    <li><strong>深度学习量化模型：</strong>提供名为 DecompGRU 的端到端模型源码（基于趋势分解的时序+截面模型），据称效果惊人</li>
+                    <li><strong>策略源码包：</strong>聚宽（JoinQuant）社区效果最好的9个策略源码 + 600+其余优质量化策略</li>
+                    <li><strong>Meme币交易策略：</strong>价值数千元的构建源码</li>
+                    <li><strong>高价值课程：</strong>包含价值4.425万元以上的"Crypto高频训练营"代码及相关Web3、预测市场赚钱副业教程</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #fff; margin-bottom: 0.8rem; font-size: 1.1rem;">2️⃣ 数据与API服务</h4>
+                <ul style="line-height: 1.9; margin-left: 1.5rem; list-style: disc; color: rgba(255,255,255,0.95);">
+                    <li><strong>Tardis数据下载：</strong>针对2月6日后加入且满3天的用户，提供一次免费代下服务（包含合约与现货数据，单次限2T以内）</li>
+                    <li><strong>金融数据接口：</strong>提供高级版 Tushare Pro API 访问权限</li>
+                    <li><strong>AI接口工具：</strong>Google Pro 账号（可使用 Gemini Pro）、无限使用 Opus 4.6 的多种方法</li>
+                    <li>通过 <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">antigravity2api</code> 反代获取 Claude Opus 4.6（bolt.new 白嫖方案）</li>
+                    <li>永久免费下载知网、万方、维普等学术论文</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="color: #fff; margin-bottom: 0.8rem; font-size: 1.1rem;">3️⃣ 硬件与服务器福利</h4>
+                <ul style="line-height: 1.9; margin-left: 1.5rem; list-style: disc; color: rgba(255,255,255,0.95);">
+                    <li><strong>VPS赠送：</strong>2月7日后加入"港美掘金知识星球"（票价299）的用户，可免费领取一年的2核2G VPS服务器（价值约200-800元）</li>
+                    <li><strong>购买优惠：</strong>微信找 a13479004101 单独购买该配置VPS的价格为100元/年</li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 style="color: #fff; margin-bottom: 0.8rem; font-size: 1.1rem;">4️⃣ 获取规则与门槛</h4>
+                <ul style="line-height: 1.9; margin-left: 1.5rem; list-style: disc; color: rgba(255,255,255,0.95);">
+                    <li><strong>入群时间要求：</strong>大多数核心福利（源码、数据代下）要求加入星球超过3天</li>
+                    <li><strong>特定任务要求：</strong>部分顶级策略代码（如聚宽9大策略）需要将星球海报/二维码转发至300人以上的AI/CS/金融类群聊</li>
+                    <li><strong>联系方式：</strong>所有福利统一通过微信 <strong style="color: #ffd700;">a13479004101</strong> 进行对接和领取</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; backdrop-filter: blur(10px);">
+            <h3 style="color: #ffd700; margin-bottom: 1rem; font-size: 1.3rem;">📈 券商开户专属福利</h3>
+            <p style="line-height: 1.8; margin-bottom: 1rem;">
+                <strong>QuantAILab公众号官方合作头部国企券商</strong>对接的客户经理微信为：<strong style="color: #ffd700;">lsrhuarui</strong>，加经理微信后注意备注从微信：<strong style="color: #ffd700;">好运莲莲</strong>渠道来的。
+            </p>
+
+            <div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 1rem; margin-bottom: 1rem;">
+                <h4 style="color: #fff; margin-bottom: 0.8rem;">🎁 为什么找客户经理开户：</h4>
+                <ol style="line-height: 1.9; margin-left: 1.5rem; color: rgba(255,255,255,0.95);">
+                    <li style="margin-bottom: 0.5rem;">比自己开户佣金更低，会额外获得：客户经理专门解答国企qmt/ptrade技术和交易问题、可被拉入官方量化专业讨论群、客户经理分享软件和量化资料、用户开户三个月内入金10万可得QMT等软件（客户经理将协助和答疑）</li>
+                    <li>像上述指定客户经理报备从微信：<strong style="color: #ffd700;">好运莲莲</strong>渠道来的，并且成功开户+开户三个月内入金十万，可加微信 <strong style="color: #ffd700;">a13479004101</strong> 获取"一年谷歌pro共享账号、一个月免费88核16GB内存120GB硬盘 windows云电脑"、tushare pro api以及刚买的2399RMB期权知识星球全部内容，含年化200%回撤18%的大宗商品套利策略和N个其他优质策略和底层方法论</li>
+                </ol>
+            </div>
+
+            <p style="padding: 1rem; background: rgba(255,215,0,0.2); border-radius: 6px; border-left: 4px solid #ffd700; line-height: 1.8;">
+                💡 <strong>Tardis API 说明：</strong>现在的Tardis API是solo 1200每月的档位，年付！（14400美元折合人民币10万多人民币）<br>
+                现货、期货、期权的数据都有啦！需要数据的联系微信 <strong style="color: #ffd700;">a13479004101</strong>。代下载每一T收费249，单次最低99
+            </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 1.5rem; backdrop-filter: blur(10px);">
+            <h3 style="color: #ffd700; margin-bottom: 1rem; font-size: 1.3rem;">🌏 致富证券美港股开户</h3>
+            <p style="line-height: 1.8; margin-bottom: 1rem;">
+                致富证券可能是一张内地身份证5分钟线上开户美港股的最后一台车了。
+            </p>
+
+            <div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 1rem; margin-bottom: 1rem;">
+                <h4 style="color: #fff; margin-bottom: 0.8rem;">🎉 开户奖励（总价值高达HK$8,800）：</h4>
+                <ul style="line-height: 1.9; margin-left: 1.5rem; list-style: disc; color: rgba(255,255,255,0.95);">
+                    <li>开户直接拿 HK$200 现金券+交易券</li>
+                    <li>入金最高返 HK$1,300，还送 NVIDIA 股票</li>
+                    <li>转仓最高回赠 HK$7,000</li>
+                    <li>推荐好友每成功一个得 HK$300</li>
+                </ul>
+            </div>
+
+            <p style="padding: 1rem; background: rgba(255,215,0,0.2); border-radius: 6px; border-left: 4px solid #ffd700; line-height: 1.8; margin-bottom: 1rem;">
+                ⚠️ <strong>重要提示：</strong>需要通过邀请码 <strong style="color: #ffd700; font-size: 1.2rem;">XC6774</strong> 注册才有数千额外奖励！<br>
+                二维码：<a href="https://image2url.com/r2/default/images/1770021823559-f8b6c7cb-d63d-4b01-9ead-48455da15c08.png" target="_blank" style="color: #ffd700; text-decoration: underline;">点击查看</a> 或 <a href="https://mp.weixin.qq.com/s/NnIA1hszlLCyQ6BVxTmMAw" target="_blank" style="color: #ffd700; text-decoration: underline;">微信文章</a>
+            </p>
+
+            <p style="line-height: 1.8;">
+                致富支持大陆用户无港卡开户，可尝试用工商银行等快速入金，需开户7天内入金1万港币等值的前才有上述奖励。<br>
+                <strong>致富chief.apk 下载：</strong><a href="https://pan.baidu.com/s/1gpI4JSYY6MwZqP8Ywor9Tw?pwd=hmec" target="_blank" style="color: #ffd700; text-decoration: underline;">百度网盘链接</a>（提取码: hmec）
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.3);">
+            <p style="font-size: 0.9rem; color: rgba(255,255,255,0.8);">
+                📞 所有福利咨询请联系微信：<strong style="color: #ffd700; font-size: 1.1rem;">a13479004101</strong> 或 <strong style="color: #ffd700; font-size: 1.1rem;">dreamsjtuai</strong>
+            </p>
+        </div>
     </div>
 
     <div style="border-top: 2px solid #ecf0f1; margin-top: 2rem; padding-top: 1.5rem;">
@@ -65,4 +244,15 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function shareToWeChat() {
+    alert('请使用微信扫一扫功能分享此页面，或复制链接发送给好友');
+}
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => alert('链接已复制！'));
+}
+</script>
 {% endblock %}

@@ -3,9 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="精选全球顶尖AI工具和效率神器 - 让每个人都能轻松提升10倍效率，工作学习快人一步">
-    <meta name="keywords" content="AI工具,效率工具,AI神器,生产力工具,学习工具,工作效率">
+    <meta name="description" content="{% block meta_description %}精选全球顶尖AI工具和效率神器 - 让每个人都能轻松提升10倍效率，工作学习快人一步。免费AI工具、ChatGPT替代品、自动化工具、设计工具、编程助手一站式导航{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}AI工具,效率工具,AI神器,生产力工具,学习工具,工作效率,ChatGPT,免费AI,AI导航,AI工具箱,自动化工具,AI写作,AI设计,AI编程{% endblock %}">
+    <meta name="author" content="全民效率神器">
+    <link rel="canonical" href="https://ai-tool.indevs.in{{ request.path }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ai-tool.indevs.in{{ request.path }}">
+    <meta property="og:title" content="{% block og_title %}全民效率神器 | 全球AI工具精选库{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}精选全球顶尖AI工具和效率神器，让每个人都能轻松提升10倍效率{% endblock %}">
+    <meta property="og:image" content="https://ai-tool.indevs.in/static/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://ai-tool.indevs.in{{ request.path }}">
+    <meta name="twitter:title" content="{% block twitter_title %}全民效率神器 | 全球AI工具精选库{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}精选全球顶尖AI工具和效率神器，让每个人都能轻松提升10倍效率{% endblock %}">
+    <meta name="twitter:image" content="https://ai-tool.indevs.in/static/og-image.jpg">
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3Q1D4PN2HC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-3Q1D4PN2HC');
+    </script>
+
+    <!-- Baidu Analytics -->
+    <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?YOUR_BAIDU_SITE_ID";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+    </script>
+
+    <!-- Baidu SEO Auto Push -->
+    <script>
+    (function(){
+        var bp = document.createElement('script');
+        var curProtocol = window.location.protocol.split(':')[0];
+        if (curProtocol === 'https') {
+            bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+        }
+        else {
+            bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+        }
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(bp, s);
+    })();
+    </script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "全民效率神器",
+      "alternateName": "AI工具导航",
+      "url": "https://ai-tool.indevs.in",
+      "description": "精选全球顶尖AI工具和效率神器，让每个人都能轻松提升10倍效率",
+      "inLanguage": "zh-CN",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://ai-tool.indevs.in/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "全民效率神器",
+      "url": "https://ai-tool.indevs.in",
+      "logo": "https://ai-tool.indevs.in/static/og-image.jpg",
+      "sameAs": []
+    }
+    </script>
+    {% block structured_data %}{% endblock %}
+
     <title>{% block title %}全民效率神器 | 让每个人都能轻松提效{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -561,6 +645,14 @@
                         <div class="logo-text" style="color: white;"><span>全民效率神器</span></div>
                     </a>
                     <p>让每个人都能轻松提升效率的神器库<br>精选AI工具、效率资源、实用神器等优质内容<br>持续更新中...</p>
+                    <div style="margin-top: 20px; padding: 16px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border-left: 3px solid #6366f1;">
+                        <h4 style="color: #6366f1; margin-bottom: 8px; font-size: 0.9rem;">💡 公众号运营技巧</h4>
+                        <p style="font-size: 0.85rem; line-height: 1.6; color: var(--gray-400);">
+                            <strong>SEO优化：</strong>挖掘长尾关键词，在标题和文章中布局，截获微信搜一搜精准流量<br>
+                            <strong>互动营销：</strong>文章留言达5条以上易触发"账号成长"功能，获得平台额外曝光<br>
+                            <strong>裂变增长：</strong>转发公众号文章到朋友圈或200+群，加微信发送转发截图，获取专属礼包
+                        </p>
+                    </div>
                 </div>
                 <div class="footer-section">
                     <h4>热门分类</h4>
