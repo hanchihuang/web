@@ -49,6 +49,11 @@ def home(request):
     return render(request, 'tools/home.html', context)
 
 
+def openclaw_column(request):
+    """OpenClaw 专栏列表页"""
+    return render(request, 'tools/openclaw_column.html')
+
+
 def tool_list(request):
     """工具列表视图"""
     tools = Tool.objects.filter(is_published=True)

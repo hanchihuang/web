@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}OpenClaw 专栏 | 全民效率神器{% endblock %}
+{% block meta_description %}OpenClaw 专栏：聚合 OpenClaw 入门教程、搜索配置、部署方案、内容增长、交易投研、编码协同、资料索引与变现实战。{% endblock %}
+
+{% block content %}
+<section style="margin-bottom: 24px;">
+  <div style="background:
+    radial-gradient(circle at top left, rgba(251,191,36,.22), transparent 28%),
+    radial-gradient(circle at top right, rgba(45,212,191,.18), transparent 24%),
+    linear-gradient(135deg,#111827 0%,#7c2d12 48%,#0f766e 100%);
+    border-radius: 24px; padding: 34px 30px; color: #f8fafc; box-shadow: var(--shadow-xl);">
+    <div style="display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap; align-items:flex-end;">
+      <div style="max-width:780px;">
+        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,.12); color:#fde68a; font-size:.92rem; margin-bottom:14px;">
+          <span>🦞</span>
+          <span>从入门到变现的一站式 OpenClaw 导航页</span>
+        </div>
+        <h1 style="font-size: 2.3rem; line-height:1.15; margin-bottom: 12px;">OpenClaw 专栏</h1>
+        <p style="color: rgba(255,255,255,.88); line-height: 1.85; margin: 0; font-size:1.02rem;">
+          这页按真实工作流重组 OpenClaw 高价值资料：先上手，再部署，再补搜索能力，最后接到内容增长、投研交易、编码协同和商业化。
+        </p>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(3,minmax(120px,1fr)); gap:12px; min-width:min(100%, 420px); flex:1;">
+        <div style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:14px 16px;">
+          <div style="font-size:1.4rem; font-weight:700;">36+</div>
+          <div style="color:#fde68a; font-size:.9rem;">精选用例</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:14px 16px;">
+          <div style="font-size:1.4rem; font-weight:700;">10+</div>
+          <div style="color:#fde68a; font-size:.9rem;">部署入口</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:14px 16px;">
+          <div style="font-size:1.4rem; font-weight:700;">8</div>
+          <div style="color:#fde68a; font-size:.9rem;">主题分区</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="margin-bottom: 18px;">
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="#starter" class="filter-btn" style="text-decoration:none;">入门总览</a>
+    <a href="#search" class="filter-btn" style="text-decoration:none;">搜索配置</a>
+    <a href="#deploy" class="filter-btn" style="text-decoration:none;">部署方案</a>
+    <a href="#growth" class="filter-btn" style="text-decoration:none;">内容增长</a>
+    <a href="#finance" class="filter-btn" style="text-decoration:none;">交易投研</a>
+    <a href="#builder" class="filter-btn" style="text-decoration:none;">编码协同</a>
+    <a href="#archive" class="filter-btn" style="text-decoration:none;">资料索引</a>
+    <a href="#monetize" class="filter-btn" style="text-decoration:none;">变现案例</a>
+  </div>
+</section>
+
+<section style="margin-bottom: 28px;">
+  <div style="background:linear-gradient(135deg,#fff7ed 0%,#ffffff 100%); border:1px solid #fdba74; border-radius:20px; padding:22px 24px; box-shadow: var(--shadow-md);">
+    <div style="display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+      <div style="max-width:780px;">
+        <div style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:#fff1f2; color:#c2410c; font-size:.9rem; font-weight:600; margin-bottom:12px;">
+          <span>🔥</span>
+          <span>本次新增</span>
+        </div>
+        <h2 style="margin:0 0 10px; color:#111827; font-size:1.4rem;">飞书文章、搜索配置和资料索引都已经挂进来了</h2>
+        <p style="margin:0; color:#7c2d12; line-height:1.85;">
+          已新增：Web Search 配置总结、从 0 到 1 上手教程、发现机会到产品上线、16 个会自我进化的 OpenClaw 员工、公众号躺更神器、飞书调用 Codex 编码、OpenClaw 搜索工作流、云服务器浏览器自动化、腾讯 CNB 一键启动，以及飞书/微信/GitHub/X 的完整资料索引。
+        </p>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="#archive" class="filter-btn" style="text-decoration:none;">看完整索引</a>
+        <a href="#search" class="filter-btn" style="text-decoration:none;">看搜索配置</a>
+        <a href="#deploy" class="filter-btn" style="text-decoration:none;">看部署方案</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="starter" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🧭</span> 入门总览</h2>
+    <span style="color: var(--gray-500);">先建立正确心智模型</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #f59e0b;">
+      <h3>全网最全！OpenClaw 从 0 到 1 上手教程</h3>
+      <p class="description">适合第一次系统理解 OpenClaw 的人。一篇打通安装、思路、使用习惯和个人成长场景。</p>
+      <div class="card-footer"><a href="https://aaf55djl41.feishu.cn/wiki/KjOcwVDA1igN0hkL5a0cflQonlc" target="_blank" rel="noopener noreferrer" class="card-link">打开教程 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #0ea5e9;">
+      <h3>OpenClaw 从“发现机会”到“产品上线”全程 AI 协同</h3>
+      <p class="description">更接近真实 AI 创业工作流，从机会识别、研究到产品交付。</p>
+      <div class="card-footer"><a href="https://aaf55djl41.feishu.cn/wiki/TTJvwnMFMiOMwTkmHnRcGh31ngg" target="_blank" rel="noopener noreferrer" class="card-link">查看工作流 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #8b5cf6;">
+      <h3>从前端到 AI 编程：16 个会自我进化的 OpenClaw 员工</h3>
+      <p class="description">适合从岗位协作角度理解 OpenClaw，而不是把它当单个聊天窗口。</p>
+      <div class="card-footer"><a href="https://my.feishu.cn/wiki/UDzSwItbZi57y6k533achvyun1b?from=from_copylink" target="_blank" rel="noopener noreferrer" class="card-link">看团队设计 <span>→</span></a></div>
+    </article>
+  </div>
+</section>
+
+<section id="search" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🔎</span> 搜索配置</h2>
+    <span style="color: var(--gray-500);">决定 Agent 会不会查资料</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #2563eb;">
+      <h3>OpenClaw 的 Web Search 为什么这么关键</h3>
+      <p class="description">搜索配置会显著影响 Agent 查资料、核实信息和跟踪时效信息的能力。</p>
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; margin-top:12px; color:#1e3a8a; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>默认优先：</strong>有卡且追求兼容性，优先 Brave Search API。</p>
+        <p style="margin:0 0 8px;"><strong>零门槛优先：</strong>不想绑卡，优先 Tavily。</p>
+        <p style="margin:0 0 8px;"><strong>进一步降成本：</strong>Exa、You.com、OpenRouter + Perplexity、多引擎方案都值得试。</p>
+        <p style="margin:0;"><strong>备注：</strong>免费额度属于社区常见说法，适合做选型参考。</p>
+      </div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #14b8a6;">
+      <h3>OpenClaw 搜索工作流</h3>
+      <p class="description">从接入到查询链路，再到如何把搜索结果交给 Agent 继续执行。</p>
+      <div class="card-footer"><a href="https://my.feishu.cn/docx/A59kdcwuGogSAex12YPcvHCbn5g?from=from_copylink" target="_blank" rel="noopener noreferrer" class="card-link">查看工作流 <span>→</span></a></div>
+    </article>
+  </div>
+</section>
+
+<section id="deploy" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🧱</span> 部署方案</h2>
+    <span style="color: var(--gray-500);">从免费试跑到稳定托管</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #ef4444;">
+      <h3>OpenClaw 一键部署</h3>
+      <p class="description">最快跑起来的官方入口。</p>
+      <div class="card-footer"><a href="https://openclaw.ai" target="_blank" rel="noopener noreferrer" class="card-link">访问官网 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #2563eb;">
+      <h3>0 元领养专属“小龙虾”OpenClaw</h3>
+      <p class="description">ModelScope / Hugging Face 的 2 核 16GB 环境，适合零成本试跑。</p>
+      <div class="card-footer"><a href="https://linux.do/t/topic/1702573" target="_blank" rel="noopener noreferrer" class="card-link">打开教程 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #10b981;">
+      <h3>腾讯 CNB：Fork 即可一键启动</h3>
+      <p class="description">fork 克隆仓库即可启动，模型 key 已自动配置，上手门槛极低。</p>
+      <div class="card-footer"><a href="https://cnb.cool/Bring/AGI/Moltbot-Clawdbot-OpenClaw/" target="_blank" rel="noopener noreferrer" class="card-link">打开 CNB <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #8b5cf6;">
+      <h3>云服务器跑 OpenClaw，浏览器自动化怎么搞？</h3>
+      <p class="description">云端运行时接浏览器自动化的高频难点解决方案。</p>
+      <div class="card-footer"><a href="https://nodewalk.feishu.cn/docx/M4oldXDAjoeM1LxQPzbcQl6hnlg" target="_blank" rel="noopener noreferrer" class="card-link">查看方案 <span>→</span></a></div>
+    </article>
+  </div>
+</section>
+
+<section id="growth" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">📣</span> 内容增长</h2>
+    <span style="color: var(--gray-500);">内容生产、分发、获客和邮件自动化</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #f97316;">
+      <h3>你现在就在跑的 5 个 OpenClaw 场景</h3>
+      <div style="margin-top:12px; color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>1.</strong> 自动写内容并发布到 X、Facebook。</p>
+        <p style="margin:0 0 8px;"><strong>2.</strong> 自动发现热门帖子并生成评论草稿。</p>
+        <p style="margin:0 0 8px;"><strong>3.</strong> 24 小时监控交易市场异常数据并输出信号。</p>
+        <p style="margin:0 0 8px;"><strong>4.</strong> 自动把英文研报编译成高质量中文研报。</p>
+        <p style="margin:0;"><strong>5.</strong> 全自动邮件营销，显著降低系统成本和人工干预。</p>
+      </div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #ec4899;">
+      <h3>公众号躺更神器：读对标、写文、配图、入草稿箱</h3>
+      <p class="description">把选题参考、内容生成、配图、存草稿串成一条能持续运行的链路。</p>
+      <div class="card-footer"><a href="https://pa23ntdf1gf.feishu.cn/wiki/Gj9TwqLXVipURikiKpzcLpDkn6e" target="_blank" rel="noopener noreferrer" class="card-link">查看流程 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #ef4444;">
+      <h3>小红书 Skills 自动化</h3>
+      <p class="description">适合把 OpenClaw 接到小红书内容分发与线索获取链路中。</p>
+      <div class="card-footer"><a href="https://github.com/white0dew/XiaohongshuSkills" target="_blank" rel="noopener noreferrer" class="card-link">打开仓库 <span>→</span></a></div>
+    </article>
+  </div>
+</section>
+
+<section id="finance" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">📈</span> 交易投研</h2>
+    <span style="color: var(--gray-500);">市场监控、研报编译、选股与交易工作流</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #14b8a6;">
+      <h3>交易市场异动监控</h3>
+      <p class="description">24 小时监控异常数据，再按你的交易策略输出可直接使用的异动信号。</p>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #0ea5e9;">
+      <h3>英文研报自动编译成中文研报</h3>
+      <p class="description">适合做翻译、结构化整理和版式标准化，大幅压缩人工编译时间。</p>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #10b981;">
+      <h3>OpenClaw Skills 自动筛选潜力股票</h3>
+      <p class="description">10 分钟搭出 AI 选股系统，适合作为 Skill 设计示范。</p>
+      <div class="card-footer"><a href="https://x.com/AYi_AInotes/status/2027677868285915390" target="_blank" rel="noopener noreferrer" class="card-link">查看案例 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #f59e0b;">
+      <h3>Polymarket 自动驾驶：自动化模拟交易</h3>
+      <p class="description">策略分析、信号执行、结果复盘、日报输出，链路完整。</p>
+      <div class="card-footer"><a href="https://github.com/AlexAnys/awesome-openclaw-usecases-zh/blob/main/usecases/polymarket-autopilot.md" target="_blank" rel="noopener noreferrer" class="card-link">查看用例 <span>→</span></a></div>
+    </article>
+  </div>
+</section>
+
+<section id="builder" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🛠️</span> 编码协同</h2>
+    <span style="color: var(--gray-500);">把 OpenClaw 接到开发和工程执行链路</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #6366f1;">
+      <h3>飞书 OpenClaw 调用 Codex 编写代码</h3>
+      <p class="description">把代码生成能力嵌入飞书工作流，让组织协作和工程执行打通。</p>
+      <div class="card-footer"><a href="https://my.feishu.cn/wiki/NmE5wyTcliXPpPkIqXPcIoOincg?from=from_copylink" target="_blank" rel="noopener noreferrer" class="card-link">查看案例 <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #8b5cf6;">
+      <h3>从前端到 AI 编程：16 个会自我进化的 OpenClaw 员工</h3>
+      <p class="description">适合从岗位分工角度思考开发团队自动化。</p>
+      <div class="card-footer"><a href="https://my.feishu.cn/wiki/UDzSwItbZi57y6k533achvyun1b?from=from_copylink" target="_blank" rel="noopener noreferrer" class="card-link">打开案例 <span>→</span></a></div>
+    </article>
+  </div>
+</section>
+
+<section id="archive" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🗂️</span> 资料索引</h2>
+    <span style="color: var(--gray-500);">所有关键文章和链接都能直接点到</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #2563eb;">
+      <h3>飞书深度教程索引</h3>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="https://aaf55djl41.feishu.cn/wiki/KjOcwVDA1igN0hkL5a0cflQonlc" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">从 0 到 1 上手教程</a>
+        <a href="https://aaf55djl41.feishu.cn/wiki/TTJvwnMFMiOMwTkmHnRcGh31ngg" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">发现机会到产品上线</a>
+        <a href="https://my.feishu.cn/wiki/UDzSwItbZi57y6k533achvyun1b?from=from_copylink" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">16 个自我进化员工</a>
+        <a href="https://pa23ntdf1gf.feishu.cn/wiki/Gj9TwqLXVipURikiKpzcLpDkn6e" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">公众号躺更神器</a>
+        <a href="https://my.feishu.cn/wiki/NmE5wyTcliXPpPkIqXPcIoOincg?from=from_copylink" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">飞书调用 Codex 编码</a>
+        <a href="https://my.feishu.cn/docx/A59kdcwuGogSAex12YPcvHCbn5g?from=from_copylink" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">OpenClaw 搜索工作流</a>
+        <a href="https://nodewalk.feishu.cn/docx/M4oldXDAjoeM1LxQPzbcQl6hnlg" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">云服务器浏览器自动化</a>
+        <a href="https://geekbang.feishu.cn/wiki/LKriwNl1tispLlkjxUDcRxqrnRg" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">睡后收入 5 个方案</a>
+      </div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #10b981;">
+      <h3>微信文章索引</h3>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="https://mp.weixin.qq.com/s/_k7_7Zbh2ibesvwg8yltfg?click_id=39" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">28 个跨境电商数字员工</a>
+        <a href="https://mp.weixin.qq.com/s/8BkDww5Sg3AXK-HD3BA3oQ" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">飞书 10 岗位生产力核爆</a>
+      </div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #f59e0b;">
+      <h3>仓库与社媒索引</h3>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="https://github.com/white0dew/XiaohongshuSkills" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">Xiaohongshu Skills</a>
+        <a href="https://github.com/AlexAnys/awesome-openclaw-usecases-zh/blob/main/usecases/polymarket-autopilot.md" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">Polymarket 自动驾驶</a>
+        <a href="https://github.com/hesamsheikh/awesome-openclaw-usecases" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">官方英文用例库</a>
+        <a href="https://github.com/AlexAnys/awesome-openclaw-usecases-zh/tree/main" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">中文用例库</a>
+        <a href="https://x.com/AYi_AInotes/status/2027677868285915390" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">AI 选股系统案例</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="monetize" style="margin-bottom: 36px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">💸</span> 变现案例</h2>
+    <span style="color: var(--gray-500);">公开收入、真实用例和可复制打法</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #f59e0b;">
+      <h3>OpenClaw 公开收入榜：TrustMRR</h3>
+      <p class="description">132 个 OpenClaw 项目、近 30 天收入超 $290K，帮助你快速判断别人到底在卖什么。</p>
+      <div class="card-footer"><a href="https://trustmrr.com/special-category/openclaw" target="_blank" rel="noopener noreferrer" class="card-link">打开 TrustMRR <span>→</span></a></div>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #0ea5e9;">
+      <h3>Awesome OpenClaw 最佳用例合集</h3>
+      <p class="description">官方英文版和中文版都值得收藏，适合快速判断哪些场景已经被社区验证过。</p>
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="https://github.com/hesamsheikh/awesome-openclaw-usecases" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">官方英文仓库</a>
+        <a href="https://github.com/AlexAnys/awesome-openclaw-usecases-zh/tree/main" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none;">中文版仓库</a>
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}
