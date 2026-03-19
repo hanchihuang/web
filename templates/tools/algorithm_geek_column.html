@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}AI算法专栏 | 全民效率神器{% endblock %}
+{% block meta_description %}AI算法专栏：围绕论文精读、RL 学习系列、AI 信息源、系统设计和工程实现整理长期可复用的入口。{% endblock %}
+
+{% block content %}
+<section style="margin-bottom: 28px;">
+  <div style="background: linear-gradient(135deg,#0f172a 0%,#312e81 52%,#0891b2 100%); border-radius: 18px; padding: 32px; color: #f8fafc; box-shadow: 0 24px 54px -36px rgba(49,46,129,.55);">
+    <h1 style="font-size: 2rem; margin-bottom: 10px;">🧠 AI算法专栏</h1>
+    <p style="color: #dbeafe; line-height: 1.85; margin: 0; max-width: 880px;">这个专栏更适合长期跟进 AI 算法，而不是零散刷几篇就走。先把论文输入、RL 系列、AI 信息源、系统设计和工程实现放到同一张地图里，再决定自己接下来要深挖哪一块。</p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:18px;">
+      <span class="badge" style="background: rgba(255,255,255,.12); color:#f8fafc;">累计 {{ column_stats.total_views|default:0 }} 浏览</span>
+      <span class="badge" style="background: rgba(34,211,238,.18); color:#cffafe;">今日 {{ column_stats.today_views|default:0 }} 浏览</span>
+      <span class="badge" style="background: rgba(129,140,248,.18); color:#e0e7ff;">论文 + RL + 海外博客 + 播客 + 工程</span>
+    </div>
+  </div>
+</section>
+
+{% include "tools/_column_nav.html" %}
+
+<section style="margin-bottom: 34px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">📰</span> AI公众号观察</h2>
+    <span style="color: var(--gray-500);">P0 重点关注 + P1 避免漏信息</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #dc2626;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">P0 重点关注</span>
+          <span class="badge" style="background: rgba(220,38,38,.12); color:#b91c1c;">10 个</span>
+        </div>
+      </div>
+      <h3>重点关注、能有原创干货</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>1. Founder Park（Founder-Park）</strong>：极客公园孵化的号，有些不错的干货文章，不论是张鹏原创、访谈还是转载。</p>
+        <p style="margin:0 0 8px;"><strong>2. 海外独角兽（unicornobserver）</strong>：拾象，不定期有投资、产业视角的深度文章，以及一些海外长文编译。</p>
+        <p style="margin:0 0 8px;"><strong>3. 数字生命卡兹克（Rockhazix）</strong>：经常分享新鲜有趣的 AI 产品、教程和行业动态，虽然会接一些 PR，但整体质量不错。</p>
+        <p style="margin:0 0 8px;"><strong>4. hanniman（hanniman）</strong>：垂直于 AI 产品经理，几乎全是原创 AI 干货。</p>
+        <p style="margin:0 0 8px;"><strong>5. MindCode（gh_5a7f423dd514）</strong>：文君老师，偏“心理学 + AI”视角，深度内容差异化很强。</p>
+        <p style="margin:0 0 8px;"><strong>6. 琢磨事（zuomoshi）</strong>：李智勇，偏产品和商业本质，AI 1.0 到 2.0 视角都比较接地气。</p>
+        <p style="margin:0 0 8px;"><strong>7. 全球风口（haiyinwangyuquan）</strong>：王煜全，投资人与产业视角，偏中观、全球、前瞻。</p>
+        <p style="margin:0 0 8px;"><strong>8. 宝玉AI（baoyu-ai）</strong>：AI 实践分享 + 海外内容翻译，实用性较强。</p>
+        <p style="margin:0 0 8px;"><strong>9. 葬AI（FuneralAI）</strong>：风格更真实甚至毒舌，对产品不会一味夸赞，读起来有辨识度。</p>
+        <p style="margin:0;"><strong>10. 语言即世界（languageisworld）</strong>：张小珺，深度访谈类 AI 内容较多，季度大模型季报质量高。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #2563eb;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">P1 差异化关注</span>
+          <span class="badge" style="background: rgba(37,99,235,.12); color:#1d4ed8;">25 个</span>
+        </div>
+      </div>
+      <h3>有必要关注，避免漏掉信息</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>1. 量子位（QbitAI）</strong> / <strong>2. 新智元（AI_era）</strong> / <strong>3. 机器之心（almosthuman2014）</strong>：AI 行业动态与新闻的基础盘。</p>
+        <p style="margin:0 0 8px;"><strong>4. 李建忠研思（gh_de6ee7e54a1e）</strong>：技术背景强，也有产品 sense。</p>
+        <p style="margin:0 0 8px;"><strong>5. Z Potentials（ZPotentials）</strong>：文章整体水准不错。</p>
+        <p style="margin:0 0 8px;"><strong>6. 程苓峰（Zhuyesuuuuuu）</strong>：比别人多剖析一层，常读常新。</p>
+        <p style="margin:0 0 8px;"><strong>7. 刘润（runliu-pub）</strong>：用通俗文字讲复杂问题，日更能力强。</p>
+        <p style="margin:0 0 8px;"><strong>8. 42章经（myfortytwo）</strong>：创投视角的优质原创类公众号。</p>
+        <p style="margin:0 0 8px;"><strong>9. 九章智驾（jiuzhangselfdriving）</strong>：偏自动驾驶。</p>
+        <p style="margin:0 0 8px;"><strong>10. Atom Capital（gh_97f8db07217b）</strong>：有些深度认知。</p>
+        <p style="margin:0 0 8px;"><strong>11. 硅基观察Pro（wuyazhinengshuo）</strong>：有原创 AI 干货思考。</p>
+        <p style="margin:0 0 8px;"><strong>12. 赛博禅心（BinaryBodhi）</strong>：OpenAI 相关一手信息较多。</p>
+        <p style="margin:0 0 8px;"><strong>13. 特工宇宙（AgentVerse）</strong>：AI 2.0 新号，有产品信息和访谈类内容。</p>
+        <p style="margin:0 0 8px;"><strong>14. 南瓜博士（nangua_boshi）</strong>：AI 在教育领域的实践视角。</p>
+        <p style="margin:0 0 8px;"><strong>15. AI炼金术（gh_8c8df7bed522）</strong>：AI 产品视角分析和案例。</p>
+        <p style="margin:0 0 8px;"><strong>16. 科技暴论（nanshu2024）</strong>：机器人领域内幕干货号。</p>
+        <p style="margin:0 0 8px;"><strong>17. 机器人大讲堂（RoboSpeak）</strong>：机器人新闻、报告和活动。</p>
+        <p style="margin:0 0 8px;"><strong>18. leaderobot（gh_1513434a6e46）</strong>：机器人事件 / 上市 / 融资合集。</p>
+        <p style="margin:0 0 8px;"><strong>19. 智东西（zhidxcom）</strong>：硬件相关的一手报道。</p>
+        <p style="margin:0 0 8px;"><strong>20. 雷锋网（leiphone-sz）</strong>：AI 产业落地深度文章和系列选题。</p>
+        <p style="margin:0 0 8px;"><strong>21. 甲子光年（jazzyear）</strong>：头部 AI 媒体 / 智库，访谈和公司报道质量不错。</p>
+        <p style="margin:0 0 8px;"><strong>22. 线性资本（LinearCapital）</strong>：所投公司动态和活动信息。</p>
+        <p style="margin:0 0 8px;"><strong>23. 五源资本（the5ycap）</strong>：与创始人的交流记录值得看。</p>
+        <p style="margin:0 0 8px;"><strong>24. 硅谷101（TheValley101）</strong>：硅谷视角的信息差和访谈。</p>
+        <p style="margin:0;"><strong>25. 暗涌Waves（waves36kr）</strong>：不定期有一手深度文章，报道能力强。</p>
+      </div>
+      <div style="margin-top:14px; padding:14px 16px; border-radius:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; line-height:1.85;">
+        <strong>补充判断：</strong>AI 类公众号里付费 PR 文章不少。如果某天多家 AI 媒体同时集中报道一家原本不知名的公司，大概率要提高警惕，注意区分信息价值和宣传成分。
+      </div>
+    </article>
+  </div>
+</section>
+
+<section style="margin-bottom: 34px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🔎</span> 顶尖科技量化博主调研</h2>
+    <span style="color: var(--gray-500);">102 位 · 22 类平台</span>
+  </div>
+  <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:22px; box-shadow: var(--shadow-lg); margin-bottom:18px;">
+    <h3 style="margin:0 0 10px; color:#111827;">102位姚班与 MIT / 斯坦福科技量化博主调研</h3>
+    <p style="margin:0 0 10px; color:#374151; line-height:1.85;">这份调研适合放在 AI 算法专栏里，因为它本质上是在解决“长期跟踪哪些高质量信息源”的问题。样本覆盖姚班、MIT、斯坦福相关的科技、AI、量化、强化学习、具身智能、量化交易与产品观察类博主。</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+      <span class="badge" style="background: rgba(37,99,235,.12); color:#1d4ed8;">总样本数：102</span>
+      <span class="badge" style="background: rgba(16,185,129,.12); color:#047857;">平台类型：22</span>
+      <span class="badge" style="background: rgba(236,72,153,.12); color:#be185d;">科技 + 量化 + AI</span>
+    </div>
+    <div style="padding:14px 16px; border-radius:12px; background:#fff7ed; border:1px solid #fdba74; color:#9a3412; line-height:1.85;">
+      <strong>附带权益信息：</strong>免费赠送本人 1000 美金购买的 crypto 高频课程和代码；可超低价使用价值 10 万多的 Tardis API；也可免费获得 A 股 / 指数 / 场内基金日线和分钟线、集合竞价、分钟资金流向、估值和基本面、龙虎榜、融资融券、指数权重、财务指标、港美股等数据。
+    </div>
+  </div>
+
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #ef4444;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">YouTube</span>
+          <span class="badge" style="background: rgba(239,68,68,.12); color:#b91c1c;">16 位</span>
+        </div>
+      </div>
+      <h3>YouTube 代表账号</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>漫士 / 漫士沉思录</strong>：姚班背景，数学科普、深度学习、算法直觉和 AI 原理内容非常强。</p>
+        <p style="margin:0 0 8px;"><strong>Simple Quant</strong>：MIT 数学学生视角，量化面试题、概率和组合数学内容聚焦。</p>
+        <p style="margin:0 0 8px;"><strong>胡渊鸣</strong>：姚班 + MIT 博士，3D 生成、物理仿真、Taichi 和创业思考。</p>
+        <p style="margin:0 0 8px;"><strong>Alexander Amini</strong>：MIT 深度学习课程与研究输出。</p>
+        <p style="margin:0;"><strong>Andrew Lo（MIT OCW）</strong>：AI in Finance、金融工程和自适应市场理论的核心资源。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #111827;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">X / Twitter</span>
+          <span class="badge" style="background: rgba(17,24,39,.12); color:#111827;">13 位</span>
+        </div>
+      </div>
+      <h3>X 平台代表账号</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Leo Zhang</strong>：Stanford Math 背景，Prediction Markets、MEV、Crypto 结构化产品。</p>
+        <p style="margin:0 0 8px;"><strong>Zitong Yang</strong>：Stanford PhD，持续自进化 AI、Synthetic Data、LLM Reasoning。</p>
+        <p style="margin:0 0 8px;"><strong>Shunyu Yao</strong>：姚班校友，Tree of Thoughts、Language Agents、RL for LLM。</p>
+        <p style="margin:0 0 8px;"><strong>Guangxuan Xiao</strong>：MIT EECS PhD，LLM、量化、VLM 与系统优化。</p>
+        <p style="margin:0;"><strong>Andrej Karpathy</strong>：Stanford PhD，LLM 教育、Agent、Vibe Coding 一线输出。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #2563eb;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">B站 / 知乎</span>
+          <span class="badge" style="background: rgba(37,99,235,.12); color:#1d4ed8;">各 10 位</span>
+        </div>
+      </div>
+      <h3>中文平台代表账号</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>B站</strong>：漫士沉思录、MIT学长说、经木东、史丹福机器人庞博士、贝叶斯派对。</p>
+        <p style="margin:0 0 8px;"><strong>知乎</strong>：尤佳轩、babyquant、李沐、胡渊鸣、周博磊。</p>
+        <p style="margin:0;">如果你更偏中文输入，这两类平台最适合作为主战场，再回到英文原文做深读。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #0f766e;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">LinkedIn / 微信</span>
+          <span class="badge" style="background: rgba(15,118,110,.12); color:#0f766e;">12+ 位</span>
+        </div>
+      </div>
+      <h3>职业与产业观察入口</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>LinkedIn</strong>：Christina Qi、Chip Huyen、Lex Fridman、Kenneth Tay 等，适合看职业路径和行业动态。</p>
+        <p style="margin:0 0 8px;"><strong>微信公众号</strong>：漫士呓语、川总写量化、硅谷徐老师、运筹OR帷幄、babyquant量化研究。</p>
+        <p style="margin:0;">这类平台更适合补充产业、职业和中文量化实操视角。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #7c3aed;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">Medium / Substack</span>
+          <span class="badge" style="background: rgba(124,58,237,.12); color:#6d28d9;">7+6 位</span>
+        </div>
+      </div>
+      <h3>长文深读入口</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Nathan Lambert</strong>：LLM Training、RLHF、Open Source AI。</p>
+        <p style="margin:0 0 8px;"><strong>Joy Buolamwini</strong>：Algorithmic Bias 与 AI Ethics。</p>
+        <p style="margin:0 0 8px;"><strong>Christina Qi</strong>：HFT、对冲基金、金融职业建议。</p>
+        <p style="margin:0;"><strong>Nimit Sohoni / Matt Robinson</strong>：Quant Careers、AI in Markets、Voice AI、Wall Street AI 应用。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #f59e0b;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">独立站 / 博客</span>
+          <span class="badge" style="background: rgba(245,158,11,.12); color:#b45309;">4+4 位</span>
+        </div>
+      </div>
+      <h3>个人站与长期沉淀</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Shunyu Yao</strong>：Agents、ReAct、RL 和推理工作流。</p>
+        <p style="margin:0 0 8px;"><strong>Kasper Johansson</strong>：Stanford 博士，Portfolio Construction、Stat Arb、MPC。</p>
+        <p style="margin:0 0 8px;"><strong>Kenneth Tay</strong>：统计方法、随机过程、量化研究。</p>
+        <p style="margin:0;"><strong>Rodney Brooks / David Bau</strong>：机器人、AI 可解释性、AGI、神经网络架构。</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="global-sources" style="margin-bottom: 34px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🌍</span> 海外信息源地图</h2>
+    <span style="color: var(--gray-500);">博客 + Newsletter + 播客 + YouTube</span>
+  </div>
+  <div style="background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:22px; box-shadow: var(--shadow-lg); margin-bottom:18px;">
+    <h3 style="margin:0 0 10px; color:#111827;">先搭一个可长期复用的英文输入面板</h3>
+    <p style="margin:0; color:#374151; line-height:1.9;">这组来源适合放在 AI 算法专栏，因为它解决的是“长期跟踪谁”的问题，而不是单次搜资料。建议用法也很简单：先拿 5 到 8 个高质量入口做基本盘，再按自己的重心往技术、产品、VC 或热点评论分支加深。</p>
+  </div>
+
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #2563eb;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">经典博客</span>
+          <span class="badge" style="background: rgba(37,99,235,.12); color:#1d4ed8;">长期常读</span>
+        </div>
+      </div>
+      <h3>商业、科技与深度思考</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Paul Graham</strong>：写创业、人生和思维方式，擅长把简单问题想得很深。</p>
+        <p style="margin:0 0 8px;"><strong>Stratechery</strong>：Ben Thompson 的科技战略分析基本是海外必读。</p>
+        <p style="margin:0 0 8px;"><strong>Not Boring</strong> / <strong>The Generalist</strong>：商业、科技和行业 deep-dive 的经典长文入口。</p>
+        <p style="margin:0 0 8px;"><strong>Elad Gil</strong> / <strong>Benedict Evans</strong>：投资人视角的科技变化观察，前者少而精，后者更新稳定。</p>
+        <p style="margin:0;"><strong>Sam Altman</strong> / <strong>Marc Andreessen</strong>：更新少，但适合考古他们的底层判断。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #7c3aed;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">AI Specific</span>
+          <span class="badge" style="background: rgba(124,58,237,.12); color:#6d28d9;">技术 + 产品</span>
+        </div>
+      </div>
+      <h3>AI 专项博客与 Newsletter</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Implications</strong> / <strong>Lilian Weng</strong>：一个偏月度 AI 思考，一个偏技术科普和安全对齐。</p>
+        <p style="margin:0 0 8px;"><strong>Latent Space</strong> / <strong>Thesephist</strong>：前者偏 AI engineer，后者偏产品交互与使用方式。</p>
+        <p style="margin:0 0 8px;"><strong>SemiAnalysis</strong> / <strong>Fabricated Knowledge</strong> / <strong>Epoch AI</strong>：芯片、算力、模型进展与定量研究。</p>
+        <p style="margin:0 0 8px;"><strong>Turing Post</strong>：覆盖面广、系统性比大多数 AI 策展 newsletter 更强。</p>
+        <p style="margin:0;"><strong>Stephen Wolfram</strong> / <strong>The Strategy Desk</strong>：一个偏底层原理和科学哲学，一个偏市场地图与产品 mapping。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #0f766e;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">VC 官方</span>
+          <span class="badge" style="background: rgba(15,118,110,.12); color:#0f766e;">机构视角</span>
+        </div>
+      </div>
+      <h3>VC 官方博客与投资 memo</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>A16Z</strong> / <strong>Sequoia</strong>：AI 趋势覆盖快，红杉的文章质量一直很稳。</p>
+        <p style="margin:0 0 8px;"><strong>Apoorv’s notes</strong> / <strong>Coatue</strong> / <strong>Bessemer</strong>：偏 data-driven 和投资 memo 风格。</p>
+        <p style="margin:0 0 8px;"><strong>Heartcore insights</strong> / <strong>NFX</strong>：适合挖每月 curated 文章和趋势综述。</p>
+        <p style="margin:0;"><strong>推荐用法：</strong>把 VC 内容当成产业地图和市场判断补充，不替代一线技术信息源。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #f59e0b;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">风格各异</span>
+          <span class="badge" style="background: rgba(245,158,11,.12); color:#b45309;">产品 / 增长 / 商业</span>
+        </div>
+      </div>
+      <h3>不只看 AI，也看产品和增长</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Dan Hock’s Essays</strong> / <strong>Growth Unhinged</strong>：商业洞察、PLG、GTM、Pricing。</p>
+        <p style="margin:0 0 8px;"><strong>How They Grow</strong> / <strong>First 1000</strong> / <strong>Lenny’s Newsletter</strong>：产品增长、前 1000 用户、方法论归纳。</p>
+        <p style="margin:0 0 8px;"><strong>Shaan Puri</strong> / <strong>Julian</strong> / <strong>Taylor Pearson</strong>：偏叙事、创业感悟和个人判断。</p>
+        <p style="margin:0;"><strong>The Technium</strong> / <strong>Every</strong>：一个偏 Kevin Kelly 的长期思考，一个偏轻量 bundle 型内容。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #db2777;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">VC 个人</span>
+          <span class="badge" style="background: rgba(219,39,119,.12); color:#be185d;">合伙人分享</span>
+        </div>
+      </div>
+      <h3>愿意持续写东西的 VC 合伙人</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Andrew Chen</strong> / <strong>Sarah Tavel</strong>：创业方法论、AI 创业判断。</p>
+        <p style="margin:0 0 8px;"><strong>Nnamdi</strong> / <strong>Digital Native</strong>：偏数据化 VC 观察与 AI 趋势。</p>
+        <p style="margin:0 0 8px;"><strong>Tomasz Tunguz</strong> / <strong>Tyler Hogge</strong>：更新频繁，一个偏 SaaS，一个偏个人感悟。</p>
+        <p style="margin:0;"><strong>Matthew Ball</strong>：更适合关注游戏、文娱、Web3 及其与 AI 的交叉。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #111827;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">播客</span>
+          <span class="badge" style="background: rgba(17,24,39,.12); color:#111827;">长时对谈</span>
+        </div>
+      </div>
+      <h3>经典、AI 专项与科技评论播客</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Lex Fridman</strong> / <strong>Dwarkesh</strong> / <strong>Acquired</strong> / <strong>Invest Like the Best</strong> / <strong>20VC</strong>：经典必听池。</p>
+        <p style="margin:0 0 8px;"><strong>Latent Space</strong> / <strong>Hard Fork</strong> / <strong>No Priors</strong>：AI engineer、新闻评论和 AI 行业访谈三种典型风格。</p>
+        <p style="margin:0 0 8px;"><strong>All-In</strong> / <strong>BG2</strong>：科技热点评论，后者通常更克制更深一点。</p>
+        <p style="margin:0;"><strong>Training Data</strong> / <strong>Unsupervised Learning</strong> / <strong>Generative Now</strong> / <strong>A16Z</strong> / <strong>YC</strong>：机构播客，嘉宾一线但质量波动更大，挑人听更划算。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #ea580c;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">YouTube</span>
+          <span class="badge" style="background: rgba(234,88,12,.12); color:#c2410c;">视频输入</span>
+        </div>
+      </div>
+      <h3>适合长期订阅的视频源</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>Matt Wolfe</strong> / <strong>AI Explained</strong>：一个偏热点周报，一个偏论文和报告解读。</p>
+        <p style="margin:0 0 8px;"><strong>3Blue1Brown</strong> / <strong>Andrej Karpathy</strong>：LLM 原理和 AI 技术科普的高质量入口。</p>
+        <p style="margin:0;"><strong>Greg Isenberg</strong>：更偏 AI 创业点子、产品化和赚钱思路。</p>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #14b8a6;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">起步建议</span>
+          <span class="badge" style="background: rgba(20,184,166,.12); color:#0f766e;">先少后多</span>
+        </div>
+      </div>
+      <h3>如果只先订 8 个入口</h3>
+      <div style="color:#374151; line-height:1.9;">
+        <p style="margin:0 0 8px;"><strong>商业战略：</strong>Stratechery、Benedict Evans</p>
+        <p style="margin:0 0 8px;"><strong>AI 技术：</strong>Lilian Weng、SemiAnalysis、Epoch AI</p>
+        <p style="margin:0 0 8px;"><strong>播客：</strong>Dwarkesh、Acquired 或 Latent Space</p>
+        <p style="margin:0;"><strong>视频：</strong>Andrej Karpathy 或 AI Explained。先把这些看稳，再决定要不要加 VC、产品增长和热点评论分支。</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section style="margin-bottom: 22px;">
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="https://arxiv.org/list/cs.LG/recent" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none; border:1px solid #99f6e4; color:#0f766e; background:#ecfeff;">📄 cs.LG 最新论文</a>
+    <a href="https://space.bilibili.com/447303411/lists/830504?type=series" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none; border:1px solid #fbcfe8; color:#be185d; background:#fdf2f8;">🎥 10 mins paper：RL领域论文</a>
+    <a href="https://arxiv.org/list/cs.DS/recent" target="_blank" rel="noopener noreferrer" class="filter-btn" style="text-decoration:none; border:1px solid #fde68a; color:#b45309; background:#fffbeb;">🌲 cs.DS 数据结构</a>
+    <a href="#global-sources" class="filter-btn" style="text-decoration:none; border:1px solid #c4b5fd; color:#6d28d9; background:#f5f3ff;">🌍 海外信息源地图</a>
+    <a href="{% url 'trending_columns' %}" class="filter-btn" style="text-decoration:none;">🔥 专栏热度榜</a>
+  </div>
+</section>
+
+<section style="margin-bottom: 34px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🗺️</span> 先搭地图，再做深挖</h2>
+    <span style="color: var(--gray-500);">4 条主线</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #06b6d4;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">论文输入</span>
+          <span class="badge" style="background: rgba(6,182,212,.12); color:#0f766e;">算法前沿</span>
+        </div>
+      </div>
+      <h3>跟踪值得读的算法论文</h3>
+      <p class="description">不是每篇论文都要精读。先看问题定义、假设条件、复杂度边界和可迁移思想，优先筛那些能改变你解题方式或系统设计判断的论文。</p>
+      <div class="card-footer">
+        <a href="https://arxiv.org/list/cs.LG/recent" target="_blank" rel="noopener noreferrer" class="card-link">看最新论文 <span>→</span></a>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #ec4899;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">RL 学习系列</span>
+          <span class="badge" style="background: rgba(236,72,153,.12); color:#be185d;">Bilibili</span>
+        </div>
+      </div>
+      <h3>系列·10 mins paper：RL领域论文</h3>
+      <p class="description">这个系列适合放进 AI 算法专栏的核心入口，因为它把强化学习论文压缩成高频、可持续跟进的视频流。适合先快速建立 RL 论文雷达，再挑值得深读的方向回到原文。</p>
+      <div class="card-footer">
+        <a href="https://space.bilibili.com/447303411/lists/830504?type=series" target="_blank" rel="noopener noreferrer" class="card-link">打开 B 站系列 <span>→</span></a>
+      </div>
+    </article>
+
+    <article class="tool-card" style="border-left: 4px solid #8b5cf6;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">论文字幕</span>
+          <span class="badge" style="background: rgba(139,92,246,.12); color:#6d28d9;">NotebookLM</span>
+        </div>
+      </div>
+      <h3>李沐论文解读字幕合集</h3>
+      <p class="description">李沐论文解读和实用机器学习视频的中英文字幕整理，配合 NotebookLM 可以快速获取课程重点，适合长期跟进学习。</p>
+      <div class="card-footer">
+        <a href="https://notebooklm.google.com/notebook/9feb6b86-d0f3-4f0e-a8a9-f52d8a572931" target="_blank" rel="noopener noreferrer" class="card-link">查看字幕合集 <span>→</span></a>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<section style="margin-bottom: 34px;">
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">📚</span> 推荐入口</h2>
+    <span style="color: var(--gray-500);">先用这些站稳基本盘</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #db2777;">
+      <div class="card-header">
+        <div class="card-badges">
+          <span class="badge badge-category">视频系列</span>
+          <span class="badge" style="background: rgba(219,39,119,.12); color:#be185d;">强化学习</span>
+        </div>
+      </div>
+      <h3>系列·10 mins paper：RL领域论文</h3>
+      <p class="description">适合把 RL 论文输入变成长期稳定节奏。先用 10 分钟级别的视频判断值不值得深读，再回到论文原文做复盘，比盲目扫论文更省时间。</p>
+      <div class="card-footer">
+        <a href="https://space.bilibili.com/447303411/lists/830504?type=series" target="_blank" rel="noopener noreferrer" class="card-link">进入系列 <span>→</span></a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <div class="section-header">
+    <h2 class="section-title"><span class="icon">🧪</span> 学习方法</h2>
+    <span style="color: var(--gray-500);">把时间用在高杠杆处</span>
+  </div>
+  <div class="tool-grid">
+    <article class="tool-card" style="border-left: 4px solid #14b8a6;">
+      <h3>1. 先抓信息源，再做筛选</h3>
+      <p class="description">别把时间花在到处找入口上。先把稳定的信息源、论文流和 RL 系列固定下来，再判断哪些值得深读，效率会高很多。</p>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #f97316;">
+      <h3>2. 把论文和工程放进同一视角</h3>
+      <p class="description">真正的算法极客，不会把论文、题目和系统完全割裂开。一个算法值不值得学，最终要看它能否改变你的问题建模和资源取舍方式。</p>
+    </article>
+    <article class="tool-card" style="border-left: 4px solid #8b5cf6;">
+      <h3>3. 先广泛跟踪，再选择深读</h3>
+      <p class="description">先靠公众号、视频系列和论文列表建立雷达，再反过来挑少数真正值得花时间的主题深入，而不是一上来就把所有资料都精读一遍。</p>
+    </article>
+  </div>
+</section>
+{% endblock %}
