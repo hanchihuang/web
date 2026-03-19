@@ -341,9 +341,19 @@ def quant_article_tardis(request):
     return render(request, 'tools/quant_article_tardis.html')
 
 
+def quant_article_tushare(request):
+    """量化资源专栏文章：Tushare Pro 数据权限说明"""
+    return render(request, 'tools/quant_article_tushare.html')
+
+
 def side_hustle_japan_goods(request):
     """副业实操文章：日本谷子代购"""
     return render(request, 'tools/side_hustle_japan_goods.html')
+
+
+def side_hustle_xiaohongshu_virtual_store_matrix(request):
+    """副业实操文章：小红书虚拟店与矩阵"""
+    return render(request, 'tools/side_hustle_xiaohongshu_virtual_store_matrix.html')
 
 
 def nano_banana_pro_guide(request):
@@ -371,6 +381,7 @@ def openclaw_ai_learning_workflow_guide(request):
     return render(request, 'tools/openclaw_ai_learning_workflow_guide.html')
 
 
+def _get_credit_account(user):
     return TTSCreditAccount.objects.get_or_create(user=user)[0]
 
 

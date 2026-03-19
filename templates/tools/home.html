@@ -64,7 +64,7 @@
       "name": "站内内容会持续更新吗？",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "会。首页展示最新更新、今日推荐和热门工具，专题页和工具库也会持续补充新内容和新案例。"
+        "text": "会。首页会持续调整精选入口、热门工具和专题页，工具库与专栏内容也会继续补充。"
       }
     }
   ]
@@ -434,12 +434,12 @@
             <div class="hero-highlights">
                 <span class="hero-highlight">🔍 先搜具体工具</span>
                 <span class="hero-highlight">🆓 先找免费入口</span>
-                <span class="hero-highlight">🔥 先看最近什么值得点</span>
-                <span class="hero-highlight">📚 先逛专栏和专题</span>
+                <span class="hero-highlight">🔥 先看最近值得点什么</span>
+                <span class="hero-highlight">🧭 再按路径继续逛</span>
             </div>
             <form method="get" action="{% url 'home' %}" style="margin-top: 32px;">
                 <div style="display: flex; gap: 12px; max-width: 600px; margin: 0 auto;">
-                    <input type="text" name="q" placeholder="搜索工具名称或描述..." value="{{ search_query }}"
+                    <input type="text" name="q" placeholder="搜工具、场景、关键词..." value="{{ search_query }}"
                            style="flex: 1; padding: 12px 20px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 16px;">
                     <button type="submit" style="padding: 12px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600;">
                         🔍 搜索
@@ -463,7 +463,7 @@
                     先选一条路径
                 </h2>
             </div>
-            <p>这个站原来最大的问题不是内容少，而是入口太多、层级太平。现在首页只保留最核心的 4 条浏览路线，让第一次进来的用户 10 秒内就知道该点哪里。</p>
+            <p>别先从头刷到尾。先确定你现在最想解决的问题，再沿一条路径往下走。</p>
             <div class="home-lane-grid">
                 <a href="{% url 'tool_list' %}" class="home-lane-card">
                     <div class="badge badge-category">找工具</div>
@@ -492,20 +492,20 @@
             </div>
         </div>
         <div class="home-command-side">
-            <h3 style="color: var(--gray-900); margin-bottom: 8px;">推荐浏览顺序</h3>
-            <p>如果你是第一次来，不要试图把首页从头扫到尾。按这个顺序看，体验会顺很多。</p>
+            <h3 style="color: var(--gray-900); margin-bottom: 8px;">第一次来就这样看</h3>
+            <p>首页负责分流，不负责把所有内容一次讲完。</p>
             <div class="home-side-stack">
                 <div class="home-side-item">
-                    <strong>1. 先看首页精选</strong>
-                    先建立判断标准，不要一上来就被数量淹没。
+                    <strong>1. 先选路径</strong>
+                    先决定你是找工具、找免费、找案例，还是找热度。
                 </div>
                 <div class="home-side-item">
-                    <strong>2. 再看热门专栏和专题</strong>
-                    把范围缩到一个更像“场景入口”的地方。
+                    <strong>2. 再看精选</strong>
+                    先看站内已经筛过的一层，再决定要不要展开全站。
                 </div>
                 <div class="home-side-item">
-                    <strong>3. 最后用热榜校准优先级</strong>
-                    再决定哪些值得现在点，哪些之后再看。
+                    <strong>3. 最后用热度校准优先级</strong>
+                    把以后再看和现在就看分开。
                 </div>
             </div>
         </div>
@@ -521,33 +521,6 @@
     </div>
     <div class="recent-viewed-grid" id="recent-viewed-grid"></div>
 </section>
-
-{% if daily_tool %}
-<section id="latest-updates" style="margin-bottom: 48px;">
-    <div style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 16px; padding: 32px; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
-        <div style="position: relative; z-index: 1;">
-            <h2 style="color: white; font-size: 1.8rem; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;">
-                <span style="font-size: 2rem;">💎</span> 今日推荐工具
-            </h2>
-            <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px;">每天为你精选一款优质工具，明天再来看看新推荐！</p>
-            <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 24px; display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;">
-                <div>
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                        <span class="badge badge-category">{{ daily_tool.category.name }}</span>
-                    </div>
-                    <h3 style="font-size: 1.5rem; color: var(--gray-900); margin-bottom: 8px;">{{ daily_tool.name }}</h3>
-                    <p style="color: var(--gray-600); line-height: 1.6;">{{ daily_tool.short_description }}</p>
-                </div>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <a href="{% url 'tool_detail' daily_tool.slug %}" style="padding: 12px 24px; background: var(--gradient-2); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; white-space: nowrap;">查看详情</a>
-                    <a href="{{ daily_tool.website_url }}" target="_blank" style="padding: 12px 24px; background: white; color: var(--primary); border: 2px solid var(--primary); border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; white-space: nowrap;">访问官网</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-{% endif %}
 
 {% if search_query %}
 <section style="margin-bottom: 48px;">
@@ -595,9 +568,11 @@
     <div class="section-header">
         <h2 class="section-title">
             <span class="icon">📌</span>
-            首页重点入口
+            本周值得逛
         </h2>
+        <a href="{% url 'trending_columns' %}" class="view-all">查看专栏热度榜 →</a>
     </div>
+    <p style="color: var(--gray-600); line-height: 1.85; margin-bottom: 18px;">先逛强入口，不要一上来就在全站乱翻。这一组是最容易让人停留、回访和收藏的页面。</p>
     <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
         <a href="{% url 'openclaw_column' %}" style="display: block; background: linear-gradient(135deg, #fff1f2 0%, #fff7ed 45%, #ecfeff 100%); border-radius: 12px; padding: 22px; border: 1px solid #fdba74; text-decoration: none; box-shadow: 0 10px 20px -12px rgba(249, 115, 22, 0.35);">
             <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #c2410c; border: 1px solid #fdba74; border-radius: 999px; padding: 4px 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">🔥 本次新增</div>
@@ -617,21 +592,17 @@
             <p style="color: #4338ca; margin-bottom: 8px; font-size: 0.95rem;">重点卖点：中文不再乱码、每月至少 343 张免费额度、10 个爆款提示词模板。</p>
             <span style="color: #1d4ed8; font-weight: 600;">阅读完整攻略 →</span>
         </a>
-        <a href="{% url 'tts_studio' %}" style="display: block; background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #ec4899 100%); border-radius: 12px; padding: 22px; border: 1px solid rgba(255,255,255,0.08); text-decoration: none;">
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 4px 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">🎙 商业化入口</div>
-            <h3 style="color: #fff; margin-bottom: 8px;">Qwen TTS 商业配音工作室</h3>
-            <p style="color: rgba(255,255,255,.88); margin-bottom: 8px;">基于本地算力生成中文甜美女声，适合口播、课程、品牌介绍和长文播客。</p>
-            <span style="color: #fff; font-weight: 600;">进入 TTS 工作室 →</span>
+        <a href="{% url 'free_resources' %}" style="display: block; background: linear-gradient(135deg, #ecfeff 0%, #eff6ff 55%, #ffffff 100%); border-radius: 12px; padding: 22px; border: 1px solid #a5f3fc; text-decoration: none; box-shadow: 0 10px 20px -12px rgba(6, 182, 212, 0.28);">
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #0f766e; border: 1px solid #99f6e4; border-radius: 999px; padding: 4px 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">🆓 高需求</div>
+            <h3 style="color: #0f172a; margin-bottom: 8px;">免费 AI 资源大全</h3>
+            <p style="color: #334155; margin-bottom: 8px;">先拿免费模型、免费 API、免费编程工具和算力入口，适合多数用户第一次收藏。</p>
+            <span style="color: #0f766e; font-weight: 600;">进入免费资源 →</span>
         </a>
-        <a href="https://trustmrr.com/special-category/openclaw" target="_blank" rel="noopener noreferrer" style="display: block; background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border-radius: 12px; padding: 22px; border: 1px solid #fcd34d; text-decoration: none;">
-            <h3 style="color: #0f172a; margin-bottom: 8px;">OpenClaw 公开收入榜：TrustMRR</h3>
-            <p style="color: #334155; margin-bottom: 8px;">132 个 OpenClaw 项目，近 30 天收入超 $290K，榜单通过 Stripe API 实时验证。</p>
-            <span style="color: #b45309; font-weight: 600;">查看公开收入数据库 →</span>
-        </a>
-        <a href="{% url 'side_hustle_japan_goods' %}" style="display: block; background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%); border-radius: 12px; padding: 22px; border: 1px solid #fed7aa; text-decoration: none;">
-            <h3 style="color: #0f172a; margin-bottom: 8px;">副业实操：日本谷子代购轻资产模型</h3>
-            <p style="color: #334155; margin-bottom: 8px;">从信息差、预售到履约系统，拆解低成本代购的可复制执行链路。</p>
-            <span style="color: #c2410c; font-weight: 600;">阅读实操指南 →</span>
+        <a href="{% url 'side_hustle_xiaohongshu_virtual_store_matrix' %}" style="display: block; background: linear-gradient(135deg, #fff7ed 0%, #ffffff 52%, #eef2ff 100%); border-radius: 12px; padding: 22px; border: 1px solid #fdba74; text-decoration: none; box-shadow: 0 10px 20px -12px rgba(245, 158, 11, 0.22);">
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #b45309; border: 1px solid #fed7aa; border-radius: 999px; padding: 4px 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">📦 新专题</div>
+            <h3 style="color: #0f172a; margin-bottom: 8px;">小红书虚拟店与矩阵专题</h3>
+            <p style="color: #334155; margin-bottom: 8px;">把虚拟矩阵、10 店矩阵、6 技合 1、冷门虚拟品和 AI 工作流集中到一页里。</p>
+            <span style="color: #b45309; font-weight: 600;">进入专题 →</span>
         </a>
         <a href="{% url 'algorithm_geek_column' %}" style="display: block; background: linear-gradient(135deg, #eef2ff 0%, #ecfeff 55%, #f8fafc 100%); border-radius: 12px; padding: 22px; border: 1px solid #a5b4fc; text-decoration: none; box-shadow: 0 10px 20px -12px rgba(99, 102, 241, 0.28);">
             <div style="display: inline-flex; align-items: center; gap: 8px; background: #ffffff; color: #4338ca; border: 1px solid #a5b4fc; border-radius: 999px; padding: 4px 10px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px;">🧠 新专栏</div>
@@ -643,35 +614,22 @@
             </div>
             <span style="color: #4338ca; font-weight: 600;">进入 AI算法专栏 →</span>
         </a>
-    </div>
-</section>
-
-    <div style="background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: var(--shadow-lg);">
-        <div class="section-header" style="margin-bottom: 14px;">
-            <h2 class="section-title">
-                <span class="icon">📚</span>
-                热门专栏
-            </h2>
-            <a href="{% url 'trending_columns' %}" class="view-all">查看专栏热度榜 →</a>
-        </div>
-        <p style="color: var(--gray-600); line-height: 1.85; margin-bottom: 18px;">如果你更想先找“值得逛的入口”，而不是先找某一个具体工具，就先看这里。排序依据是最近 7 天真实浏览数据。</p>
-        <div style="display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
-            {% for column in column_leaderboard|slice:":4" %}
-            <a href="{% url column.url_name %}" style="display:block; text-decoration:none; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border:1px solid #e2e8f0; border-radius:16px; padding:20px;">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
-                    <span class="badge badge-category">#{{ forloop.counter }} 专栏</span>
-                    <span class="badge" style="background: rgba(37, 99, 235, 0.12); color:#1d4ed8;">7日 {{ column.week_views|default:0 }}</span>
-                </div>
-                <h3 style="color: var(--gray-900); margin-bottom: 8px;">{{ column.title }}</h3>
-                <p style="color: var(--gray-600); margin-bottom: 10px; line-height: 1.8;">先从热度更高的专栏开始，通常更容易快速看到最近被反复点击和收藏的内容。</p>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-                    <span class="badge" style="background: rgba(15, 23, 42, 0.06); color:#334155;">累计 {{ column.total_views|default:0 }}</span>
-                    <span class="badge" style="background: rgba(20, 184, 166, 0.12); color:#0f766e;">近7天 {{ column.week_views|default:0 }}</span>
-                </div>
-                <span style="color:#2563eb; font-weight:600;">进入专栏 →</span>
-            </a>
-            {% endfor %}
-        </div>
+        <a href="{% url 'trending_tools' %}" style="display:block; text-decoration:none; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border:1px solid #e2e8f0; border-radius:16px; padding:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                <span class="badge badge-category">热度优先</span>
+            </div>
+            <h3 style="color: var(--gray-900); margin-bottom: 8px;">7日上升热度榜</h3>
+            <p style="color: var(--gray-600); margin-bottom: 10px; line-height: 1.8;">如果你不确定先看什么，就先看最近持续上升的工具和入口。</p>
+            <span style="color:#2563eb; font-weight:600;">进入热榜 →</span>
+        </a>
+        <a href="{% url 'topic_list' %}" style="display:block; text-decoration:none; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border:1px solid #e2e8f0; border-radius:16px; padding:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+                <span class="badge badge-category">场景入口</span>
+            </div>
+            <h3 style="color: var(--gray-900); margin-bottom: 8px;">专题集合页</h3>
+            <p style="color: var(--gray-600); margin-bottom: 10px; line-height: 1.8;">按人群和场景拆好的入口页，适合继续往更具体的需求下钻。</p>
+            <span style="color:#2563eb; font-weight:600;">查看专题 →</span>
+        </a>
     </div>
 </section>
 
@@ -686,7 +644,7 @@
                         精选推荐
                     </h2>
                 </div>
-                <p>把 `useclaw` 那种“先看精选，再按主题继续筛”的浏览方式搬到首页。先看高质量工具，再决定往哪个分类深入。</p>
+                <p>先看站内已经筛过的一层，再决定要不要展开到完整工具库。</p>
             </div>
             <a href="{% url 'tool_list' %}" class="view-all">查看全部 →</a>
         </div>
@@ -741,10 +699,10 @@
             <div class="section-header">
                 <h2 class="section-title">
                     <span class="icon">🧭</span>
-                    筛选更多
+                    按分类继续筛
                 </h2>
             </div>
-            <p>像 `useclaw` 的分类胶囊一样，先选方向，再进入该分类的完整工具池。</p>
+            <p>如果你已经知道方向，就直接进分类池，不用继续在首页停留。</p>
             <div class="category-filter" style="background: transparent; box-shadow: none; padding: 0; margin-bottom: 0;">
                 <a href="{% url 'tool_list' %}" class="filter-btn active">全部工具 <span class="filter-count">{{ tool_count }}</span></a>
                 {% for category in categories %}
@@ -756,8 +714,8 @@
             </div>
         </div>
         <div class="browse-more-cta">
-            <h3>继续深挖</h3>
-            <p>如果首页精选不够，就去完整列表按分类查看，或者直接看 7 日热榜找最近流量上升的工具。</p>
+            <h3>不想再迷路就从这里走</h3>
+            <p>首页负责分流，完整列表负责筛选。需要更多结果时，直接进入工具库或热榜。</p>
             <div class="browse-more-actions">
                 <a href="{% url 'tool_list' %}" class="browse-more-primary">进入全部工具</a>
                 <a href="{% url 'trending_tools' %}" class="browse-more-secondary">查看热榜</a>
@@ -766,52 +724,16 @@
     </div>
 </section>
 
-<section id="recent-tools" style="margin-bottom: 48px;">
-    <div class="section-header">
-        <h2 class="section-title">
-            <span class="icon">🆕</span>
-            最新上架
-        </h2>
-        <a href="{% url 'tool_list' %}" class="view-all">查看全部 →</a>
-    </div>
-    <div class="tool-grid">
-        {% for tool in recent_tools %}
-        <div class="tool-card">
-            <div class="card-header">
-                <div class="card-badges">
-                    <span class="badge badge-category">{{ tool.category.name }}</span>
-                    <span class="badge badge-new">NEW</span>
-                </div>
-            </div>
-            <h3>{{ tool.name }}</h3>
-            <p class="description">{{ tool.short_description }}</p>
-            <div class="card-footer">
-                <a href="{% url 'tool_detail' tool.slug %}" class="card-link">
-                    查看详情 <span>→</span>
-                </a>
-                <a href="{{ tool.website_url }}" target="_blank" rel="noopener" class="external-link">
-                    访问 ↗
-                </a>
-            </div>
-        </div>
-        {% empty %}
-        <p style="color: var(--gray-500); text-align: center; grid-column: 1 / -1; padding: 48px;">
-            暂无工具，请在管理后台添加
-        </p>
-        {% endfor %}
-    </div>
-</section>
-
 <section id="hot-tools" style="margin-bottom: 48px;">
     <div class="section-header">
         <h2 class="section-title">
             <span class="icon">🔥</span>
-            热门工具
+            当前最常被点开的工具
         </h2>
         <a href="{% url 'tool_list' %}" class="view-all">查看全部 →</a>
     </div>
     <div class="tool-grid">
-        {% for tool in hot_tools %}
+        {% for tool in hot_tools|slice:":4" %}
         <div class="tool-card">
             <div class="card-header">
                 <div class="card-badges">
@@ -834,59 +756,11 @@
     </div>
 </section>
 
-<section id="topic-entries" style="margin-bottom: 48px;">
-    <div class="section-header">
-        <h2 class="section-title">
-            <span class="icon">📈</span>
-            热榜与专题入口
-        </h2>
-    </div>
-    <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-        <a href="{% url 'trending_tools' %}" style="display: block; background: white; border-radius: 12px; padding: 22px; border: 1px solid #e5e7eb; text-decoration: none;">
-            <h3 style="color: #111827; margin-bottom: 8px;">7日上升热度榜</h3>
-            <p style="color: #6b7280;">自动按近7天浏览量排序，持续更新最热工具。</p>
-        </a>
-        <a href="{% url 'trending_columns' %}" style="display: block; background: white; border-radius: 12px; padding: 22px; border: 1px solid #e5e7eb; text-decoration: none;">
-            <h3 style="color: #111827; margin-bottom: 8px;">专栏热度榜</h3>
-            <p style="color: #6b7280;">先从被用户反复点击的专栏入口开始，避免到处乱逛。</p>
-        </a>
-        <a href="{% url 'topic_list' %}" style="display: block; background: white; border-radius: 12px; padding: 22px; border: 1px solid #e5e7eb; text-decoration: none;">
-            <h3 style="color: #111827; margin-bottom: 8px;">专题集合页</h3>
-            <p style="color: #6b7280;">按人群/场景自动生成专题，覆盖更多长尾搜索词。</p>
-        </a>
-    </div>
-</section>
-
-{% if featured_topics %}
-<section style="margin-bottom: 48px;">
-    <div class="section-header">
-        <h2 class="section-title">
-            <span class="icon">🧭</span>
-            推荐专题
-        </h2>
-        <a href="{% url 'topic_list' %}" class="view-all">查看全部 →</a>
-    </div>
-    <div class="tool-grid">
-        {% for topic in featured_topics %}
-        <div class="tool-card">
-            <h3>{{ topic.title }}</h3>
-            <p class="description">{{ topic.meta_description }}</p>
-            <div class="card-footer">
-                <a href="{% url 'topic_detail' topic.slug %}" class="card-link">
-                    查看专题 <span>→</span>
-                </a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
 <!-- Second Bookmark CTA -->
 <div class="bookmark-cta" style="margin-top: 48px;">
-    <h3>🎁 把首页改成“值得收藏的总入口”</h3>
-    <p>这里现在只保留 4 类高价值动作：先选路径、看精选、看热度、再深挖。<br>
-    <strong>按 Ctrl+D（Mac: Cmd+D）收藏后，下次直接从这里继续筛，不需要重新满网搜索。</strong></p>
+    <h3>🎁 这一页现在更适合收藏了</h3>
+    <p>下次不需要重新满网搜索，直接从这里继续筛就行。<br>
+    <strong>按 Ctrl+D（Mac: Cmd+D）收藏，把它当成固定起点。</strong></p>
     <a href="{% url 'tool_list' %}" class="bookmark-btn">
         🚀 立即探索全部工具
     </a>
