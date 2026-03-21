@@ -130,8 +130,8 @@
       <span class="free-sidepromo-badge">💬 微信群聊二维码</span>
       <h3>微信扫码进群</h3>
       <p>直接用微信扫一扫。如果页面里看不清，点图可放大查看。</p>
-      <a href="/static/images/sidebar/ewm.jpg" target="_blank" rel="noopener noreferrer" class="qr-link">
-        <img src="/static/images/sidebar/ewm.jpg" alt="微信群聊二维码">
+      <a href="/static/images/sidebar/ewm.jpg?v=20260321" target="_blank" rel="noopener noreferrer" class="qr-link">
+        <img src="/static/images/sidebar/ewm.jpg?v=20260321" alt="微信群聊二维码：AI超级个体效率工具分享 群5">
       </a>
       <span class="free-sidepromo-cta">点击图片放大 →</span>
     </div>
@@ -175,8 +175,8 @@
       <div class="hero-stats">
         <div><div class="stat-num">100+</div><div class="stat-label">Skills技能</div></div>
         <div><div class="stat-num">50+</div><div class="stat-label">插件平台</div></div>
-        <div><div class="stat-num">30+</div><div class="stat-label">优惠活动</div></div>
-        <div><div class="stat-num">20+</div><div class="stat-label">AI模型</div></div>
+        <div><div class="stat-num">35+</div><div class="stat-label">优惠活动</div></div>
+        <div><div class="stat-num">25+</div><div class="stat-label">AI模型</div></div>
       </div>
       <div class="lang-switch">
         <button onclick="setLang('zh')" class="lang-btn active" id="btn-zh">中文</button>
@@ -199,6 +199,7 @@
       <div class="tab" onclick="filter('cloud', this)">☁️ 厂商优惠</div>
       <div class="tab" onclick="filter('skill', this)">🧩 Skills</div>
       <div class="tab" onclick="filter('install', this)">🚀 部署</div>
+      <div class="tab" onclick="filter('coding', this)">💻 免费编程</div>
       <div class="tab" onclick="filter('event', this)">📅 活动</div>
     </div>
 
@@ -313,6 +314,12 @@
       {id:16,title:'文心一言免费',icon:'🔴',color:'#2932e1',desc:'百度ERNIE免费使用',url:'https://yiyan.baidu.com',tags:['free'],category:'free',detail:'🆓 <strong>免费使用</strong><br>✅ ERNIE 3.5<br>📱 稳定可靠'},
       {id:17,title:'Qwen3-TTS Space',icon:'🗣️',color:'#14b8a6',desc:'Hugging Face 上可直接体验的 Qwen3-TTS，免费文本转语音，生成速度较快',url:'https://huggingface.co/spaces/Qwen/Qwen3-TTS',tags:['free'],category:'free',detail:'🆓 <strong>免费体验</strong><br>✅ 文本生成语音<br>⚡ GPU 可用时生成较快'},
 
+      {id:18,title:'无限邮箱注册GPT免费领一个月',icon:'📧',color:'#ef4444',desc:'用临时无限邮箱注册OpenAI账号，无需Visa/Mastercard即可免费领取一个月GPT Business套餐，可邀请多个team members共享',url:'https://tempmail.plus',tags:['free','promo'],category:'free',detail:'📧 <strong>无限邮箱注册</strong><br>✅ 免费领 GPT Business 一个月<br>✅ 可邀请多个 team members<br>⚠️ 无需信用卡'},
+      {id:19,title:'PayPal白嫖GPT Pro攻略',icon:'💳',color:'#1e40af',desc:'用中国银行卡绑定PayPal订阅GPT Pro，扣费后立即解绑银行卡避免自动续费，全程无Visa卡也能上车',url:'https://chat.openai.com',tags:['free','promo'],category:'free',detail:'💳 <strong>PayPal白嫖攻略</strong><br>✅ 中国银行卡+PayPal上车<br>✅ 订阅后禁用该卡防续费<br>⚠️ 零成本白嫖 GPT Pro'},
+      {id:60,title:'Codex多账号批量管理工具',icon:'🛠️',color:'#7c3aed',desc:'cockpit-tools：通用AI IDE多账号一键批量管理与自动切换工具，支持 Codex/GitHub Copilot/Cursor/Windsurf/Kiro等',url:'https://github.com/jlcodes99/cockpit-tools',tags:['free','coding'],category:'coding',detail:'🛠️ <strong>cockpit-tools</strong><br>✅ 多账号批量管理与自动切换<br>✅ 支持 Codex/Copilot/Windsurf/Kiro/Cursor/Gemini-cli<br>✅ 配额监控 / 自动唤醒 / 多开实例'},
+      {id:61,title:'免费无限量Codex API',icon:'⚡',color:'#9333ea',desc:'无限免费使用 Codex API，无需 Visa 卡或 MasterCard，一键批量管理与自动切换多账号',url:'https://github.com/jlcodes99/cockpit-tools',tags:['free','coding'],category:'coding',detail:'⚡ <strong>免费无限量 Codex API</strong><br>✅ 无需信用卡<br>✅ 一键批量管理与自动切换<br>✅ cockpit-tools 工具配套使用'},
+
+
       {id:20,title:'GemAI 公益 API',icon:'🧪',color:'#0f766e',desc:'目前能用的公益 API 注册入口，适合调试和工作流接入',url:'https://api.gemai.cc/register?aff=gTcX',tags:['cloud','free'],category:'cloud',detail:'🆓 <strong>公益 API</strong><br>✅ 目前能用<br>🔌 适合开发调试'},
       {id:21,title:'阿里云AI产品优惠',icon:'🐳',color:'#0d9488',desc:'阿里云AI产品新用户优惠，DashScope折扣',url:'https://www.aliyun.com',tags:['cloud','promo'],category:'cloud',detail:'🎁 <strong>新用户专享</strong><br>✅ AI产品折扣<br>☁️ 阿里云生态'},
       {id:22,title:'腾讯云AI优惠',icon:'🟢',color:'#12b7f5',desc:'腾讯云AI产品限时折扣，混元API优惠',url:'https://cloud.tencent.com',tags:['cloud','promo'],category:'cloud',detail:'🎁 <strong>限时折扣</strong><br>✅ 混元API优惠<br>☁️ 腾讯云生态'},
@@ -352,6 +359,7 @@
       cloud:{zh:'☁️ 厂商优惠',en:'☁️ Cloud Promo',icon:'☁️'},
       skill:{zh:'🧩 Skills技能',en:'🧩 Skills',icon:'🧩'},
       install:{zh:'🚀 一键部署',en:'🚀 Deploy',icon:'🚀'},
+      coding:{zh:'💻 免费编程',en:'💻 Free Coding',icon:'💻'},
       event:{zh:'📅 活动资讯',en:'📅 Events',icon:'📅'}
     };
 
@@ -369,11 +377,11 @@
       });
 
       if (currentFilter==='all') {
-        filtered.sort((a,b)=>{const o={promo:1,free:2,cloud:3,skill:4,install:5,event:6};return (o[a.category]||99)-(o[b.category]||99);});
+        filtered.sort((a,b)=>{const o={promo:1,free:2,coding:3,cloud:4,skill:5,install:6,event:7};return (o[a.category]||99)-(o[b.category]||99);});
       }
 
       grid.innerHTML = filtered.map(r=>{
-        const tagLabels={free:'免费',promo:'促销',cloud:'厂商',skill:'技能',install:'部署',event:'活动'};
+        const tagLabels={free:'免费',promo:'促销',cloud:'厂商',skill:'技能',install:'部署',event:'活动',coding:'编程'};
         const tags = r.tags.map(t=>'<span class="tag-item tag-'+t+'">'+(tagLabels[t]||t)+'</span>').join('');
         const badge = r.category==='promo'?'<span class="promo-tag">HOT</span>':'';
         return '<div class="card"><div class="card-header"><div class="card-icon" style="background:'+r.color+'20;">'+r.icon+'</div><div class="card-title">'+badge+'<a href="'+r.url+'" target="_blank" rel="noopener noreferrer">'+r.title+'</a></div></div><p class="card-desc">'+r.desc+'</p><div class="card-detail">'+r.detail+'</div><div class="card-tags">'+tags+'</div><a href="'+r.url+'" class="card-link" target="_blank" rel="noopener noreferrer">'+(currentLang==='zh'?'查看→':'View→')+'</a></div>';

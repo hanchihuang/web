@@ -769,9 +769,12 @@ def tts_studio(request):
         'recharge_form': recharge_form,
         'consume_form': consume_form,
         'voice_cards': voice_cards,
-        'pricing_examples': DEFAULT_RECHARGE_PACKS,
+        'pricing_examples': [
+            {**item, 'price': Decimal('0.00')}
+            for item in DEFAULT_RECHARGE_PACKS
+        ],
         'sales_wechat': os.getenv('TTS_SALES_WECHAT', 'dreamsjtuai'),
-        'payment_note': os.getenv('TTS_PAYMENT_NOTE', '登录后直接购买字数额度，微信支付回调自动充值到账；提交文本时自动扣额度并入队生成。'),
+        'payment_note': os.getenv('TTS_PAYMENT_NOTE', '当前 TTS 面向全体用户免费开放。注册登录后可直接提交文本进入生成队列，不需要充值或付款。'),
         'manual_payment_notice': MANUAL_PAYMENT_NOTICE,
         'auth_error': auth_error,
         'account': account,

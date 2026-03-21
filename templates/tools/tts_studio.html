@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}低价生成优质TTS{% endblock %}
-{% block meta_description %}低价生成优质 TTS，登录后购买字数额度，提交文本后自动扣额度并进入生成队列。{% endblock %}
-{% block og_title %}低价生成优质TTS{% endblock %}
-{% block og_description %}低价生成优质 TTS，登录、充值、提交文本、自动生成。{% endblock %}
+{% block title %}免费优质TTS{% endblock %}
+{% block meta_description %}免费优质 TTS，注册登录后直接提交文本，默认无限额度，不需要充值或付款。{% endblock %}
+{% block og_title %}免费优质TTS{% endblock %}
+{% block og_description %}免费优质 TTS，注册即默认无限额度，提交文本后自动进入生成队列。{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -48,25 +48,25 @@
             <div style="display: grid; gap: 28px; grid-template-columns: 1.15fr 0.85fr; align-items: center;">
                 <div>
                     <div style="display: inline-flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.12); color: #fff; border-radius: 999px; padding: 8px 14px; margin-bottom: 18px; font-weight: 600;">
-                        <span>登录后直接充值额度</span>
-                        <span style="opacity: 0.75;">支付自动到账</span>
+                        <span>全体用户免费</span>
+                        <span style="opacity: 0.75;">注册即默认无限额度</span>
                     </div>
-                    <h1 style="font-size: 3.2rem; line-height: 1.08; margin-bottom: 16px;">低价生成优质 TTS<br>充值额度后自动扣费生成</h1>
+                    <h1 style="font-size: 3.2rem; line-height: 1.08; margin-bottom: 16px;">免费生成优质 TTS<br>注册后直接提交自动生成</h1>
                     <p style="font-size: 1.1rem; max-width: 640px;">
-                        用户只需注册登录、扫码付款并上传截图。你在后台确认到账后，额度会自动加到账号里。之后提交文本时，系统按字数直接扣额度并进入 5090 GPU 生成队列。
+                        现在页面已经改成全体免费模式。用户注册登录后默认就是无限额度，提交文本后会直接进入 5090 GPU 生成队列，不需要充值、付款或上传截图。
                     </p>
                     <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px;">
                         <a href="#studio" class="nav-cta" style="text-decoration: none;">进入额度面板</a>
-                        <a href="#pricing" style="text-decoration: none; color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 10px 18px; font-weight: 600;">查看充值价格</a>
+                        <a href="#pricing" style="text-decoration: none; color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 10px 18px; font-weight: 600;">查看免费说明</a>
                     </div>
                 </div>
                 <div style="background: rgba(255,255,255,0.1); border-radius: 18px; padding: 24px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.16);">
                     <h3 style="color: #fff; margin-bottom: 14px; font-size: 1.35rem;">自动化流程</h3>
                     <div style="display: grid; gap: 12px;">
                         <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">1. 用户注册登录</div>
-                        <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">2. 扫码付款充值字数</div>
-                        <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">3. 后台确认到账加额度</div>
-                        <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">4. 提交文本自动扣额度并生成</div>
+                        <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">2. 注册即默认无限额度</div>
+                        <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">3. 直接提交文本进入队列</div>
+                        <div style="background: rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; color: #f8fafc;">4. 生成完成后下载音频</div>
                     </div>
                 </div>
             </div>
@@ -80,13 +80,13 @@
     <div style="display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
         {% for item in pricing_examples %}
         <div class="tool-card">
-            <div class="badge badge-featured" style="margin-bottom: 10px;">充值套餐</div>
+            <div class="badge badge-featured" style="margin-bottom: 10px;">免费档位</div>
             <h3>{{ item.label }}</h3>
-            <p class="description">{{ item.price }} 元，到账即加 {{ item.chars }} 字额度。</p>
+            <p class="description">{{ item.price }} 元，可直接提交 {{ item.chars }} 字参考量级的文本。</p>
         </div>
         {% endfor %}
     </div>
-    <p style="margin-top: 14px; color: #64748b;">定价规则固定为每 10000 字 1.2 元。当前使用个人微信收款，用户付款后上传截图，你在后台一键确认到账即可加额度。</p>
+    <p style="margin-top: 14px; color: #64748b;">当前网页端标价统一改为 <strong>0 元</strong>。页面按免费开放模式展示，不再要求用户充值、付款或上传支付截图。</p>
 </section>
 
 <section style="margin-bottom: 48px;">
@@ -132,7 +132,7 @@
                         {{ login_form.password.errors }}
                     </div>
                 </div>
-                <button type="submit" class="nav-cta" style="border: none; cursor: pointer; margin-top: 16px;">登录进入额度面板</button>
+                <button type="submit" class="nav-cta" style="border: none; cursor: pointer; margin-top: 16px;">登录进入免费面板</button>
             </form>
         </div>
         <div class="tool-card">
@@ -177,7 +177,7 @@
     <div class="tts-grid">
         <div class="tool-card">
             <div class="section-header" style="margin-bottom: 16px;">
-                <h2 class="section-title"><span class="icon">💳</span> 额度面板</h2>
+                <h2 class="section-title"><span class="icon">💳</span> 免费面板</h2>
             </div>
             <div style="display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px;">
                 <div style="padding: 16px; border-radius: 14px; background: #ecfdf5;">
@@ -191,18 +191,18 @@
                     {% endif %}
                 </div>
                 <div style="padding: 16px; border-radius: 14px; background: #eff6ff;">
-                    <div style="color: #1d4ed8; font-weight: 700;">累计购买</div>
+                    <div style="color: #1d4ed8; font-weight: 700;">累计记录</div>
                     <div style="font-size: 2rem; font-weight: 800; color: #1e3a8a;">{{ account.total_purchased_chars }}</div>
-                    <div style="color: #1d4ed8;">累计消费 {{ account.total_used_chars }}</div>
+                    <div style="color: #1d4ed8;">累计转换 {{ account.total_used_chars }}</div>
                 </div>
                 <div style="padding: 16px; border-radius: 14px; background: #fff7ed;">
-                    <div style="color: #9a3412; font-weight: 700;">累计转换上限</div>
+                    <div style="color: #9a3412; font-weight: 700;">当前模式</div>
                     {% if account.is_unlimited %}
-                    <div style="font-size: 2rem; font-weight: 800; color: #7c2d12;">无限</div>
-                    <div style="color: #9a3412;">该账号不执行总字数上限</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #7c2d12;">免费</div>
+                    <div style="color: #9a3412;">该账号默认无限额度，不执行总字数上限</div>
                     {% else %}
-                    <div style="font-size: 2rem; font-weight: 800; color: #7c2d12;">{{ account.total_purchased_chars }}</div>
-                    <div style="color: #9a3412;">累计实际转换字数不会超过这个值</div>
+                    <div style="font-size: 2rem; font-weight: 800; color: #7c2d12;">受限</div>
+                    <div style="color: #9a3412;">该账号仍处于旧额度模式</div>
                     {% endif %}
                 </div>
             </div>
@@ -210,23 +210,9 @@
                 <div style="font-weight: 700;">当前账号：{{ request.user.username }}</div>
                 <a href="{% url 'tts_logout' %}" style="text-decoration: none; color: #b91c1c; font-weight: 700;">退出登录</a>
             </div>
-            <form method="post" novalidate>
-                {% csrf_token %}
-                <input type="hidden" name="action" value="recharge">
-                <div>
-                    <label style="font-weight: 600; display: block; margin-bottom: 6px;">选择充值套餐</label>
-                    {{ recharge_form.char_amount }}
-                    {{ recharge_form.char_amount.errors }}
-                </div>
-                <button type="submit" class="nav-cta" style="border: none; cursor: pointer; margin-top: 16px;">创建充值订单</button>
-            </form>
-            <div style="margin-top: 18px; padding: 18px; border-radius: 16px; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); border: 1px solid #bfdbfe; text-align: center;">
-                <img src="{% static 'tts/wx.jpg' %}" alt="微信收款码" style="width: 100%; max-width: 260px; border-radius: 14px;">
-                <div style="margin-top: 10px; color: #1e3a8a; font-weight: 700;">微信扫码充值</div>
-                <div style="margin-top: 6px; color: #475569; font-size: 0.92rem;">{{ manual_payment_notice }}</div>
-            </div>
-            <div style="margin-top: 14px; padding: 14px; border-radius: 12px; background: #f8fafc;">
-                <strong>联系微信：</strong> {{ sales_wechat }}
+            <div style="padding: 18px; border-radius: 16px; background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); border: 1px solid #bbf7d0;">
+                <div style="color: #166534; font-weight: 800; margin-bottom: 8px;">当前网页端对全体用户免费</div>
+                <div style="color: #475569; line-height: 1.8;">你现在不需要充值。账号已经默认无限额度，直接在右侧提交文本即可进入生成队列。</div>
             </div>
         </div>
         <div class="tool-card">
@@ -261,27 +247,14 @@
                     {{ consume_form.source_text.errors }}
                 </div>
                 <div style="margin-top: 16px; padding: 14px; border-radius: 12px; background: #eff6ff; color: #1e3a8a;">
-                    <strong>说明：</strong> 提交后系统按实际字数直接扣减额度，不再单独付款。
+                    <strong>说明：</strong> 当前为免费模式。提交后会直接进入生成队列，不需要付款。
                 </div>
-                <button type="submit" class="nav-cta" style="border: none; cursor: pointer; margin-top: 16px;">提交并扣额度</button>
+                <button type="submit" class="nav-cta" style="border: none; cursor: pointer; margin-top: 16px;">免费提交并生成</button>
             </form>
         </div>
     </div>
 
     <div class="tts-grid" style="margin-top: 24px;">
-        <div class="tool-card">
-            <h2 style="margin-bottom: 12px;">最近充值</h2>
-            <div style="display: grid; gap: 12px;">
-                {% for item in recent_recharges %}
-                <div style="padding: 14px; border-radius: 12px; background: #f8fafc;">
-                    <div><strong>{{ item.order_no }}</strong></div>
-                    <div>{{ item.char_amount }} 字 / {{ item.amount }} 元 / {{ item.get_payment_status_display }}</div>
-                </div>
-                {% empty %}
-                <div style="color: #64748b;">还没有充值记录。</div>
-                {% endfor %}
-            </div>
-        </div>
         <div class="tool-card">
             <h2 style="margin-bottom: 12px;">最近 TTS 提交</h2>
             <div style="display: grid; gap: 12px;">
@@ -293,6 +266,23 @@
                 {% empty %}
                 <div style="color: #64748b;">还没有 TTS 提交记录。</div>
                 {% endfor %}
+            </div>
+        </div>
+        <div class="tool-card">
+            <h2 style="margin-bottom: 12px;">免费状态</h2>
+            <div style="display: grid; gap: 12px;">
+                <div style="padding: 14px; border-radius: 12px; background: #f0fdf4;">
+                    <div><strong>当前标价</strong></div>
+                    <div>0 元</div>
+                </div>
+                <div style="padding: 14px; border-radius: 12px; background: #eff6ff;">
+                    <div><strong>账号额度</strong></div>
+                    <div>默认无限</div>
+                </div>
+                <div style="padding: 14px; border-radius: 12px; background: #fff7ed;">
+                    <div><strong>支付要求</strong></div>
+                    <div>无需充值、无需付款、无需上传截图</div>
+                </div>
             </div>
         </div>
     </div>
