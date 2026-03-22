@@ -3,12 +3,17 @@ import json
 import subprocess
 import sys
 import re
+from urllib.parse import urlsplit
+import markdown
+import requests
 from decimal import Decimal, InvalidOperation
 from base64 import b64encode
 from io import BytesIO
+from pathlib import Path
 
+from django.contrib.auth.hashers import check_password
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import FileResponse, HttpResponse, Http404, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -16,7 +21,8 @@ from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.utils import timezone
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.http import require_POST
 from datetime import date, timedelta
 from .forms import (
     TTSOrderForm,
@@ -27,11 +33,15 @@ from .forms import (
     TTSRechargeForm,
     TTSCreditConsumeForm,
     TTSCreditRechargeProofForm,
+    EdgeInferenceRequestForm,
 )
-from .models import Category, Tool, TopicPage, ColumnPage, ColumnDailyView, ToolDailyView, TTSOrder, TTSCreditAccount, TTSCreditRechargeOrder, TTSCreditLedger
+from .models import Category, Tool, TopicPage, ColumnPage, ColumnDailyView, ToolDailyView, TTSOrder, TTSCreditAccount, TTSCreditRechargeOrder, TTSCreditLedger, ApiRelayService, UserApiRelayAccess, TardisRagEntry, TushareRagEntry, EdgeInferenceOffer, EdgeInferenceRequest
 from .tts_config import get_tts_runtime_rules, estimate_total_chunks
 from .tts import VOICE_PRESET_CONFIG, build_quote, build_turnaround, build_recharge_amount, DEFAULT_RECHARGE_PACKS
 from .tts_jobs import stop_tts_worker, trigger_tts_generation
+from .tardis_rag import answer_tardis_question, build_dynamic_chunks, extract_tardis_entries_from_text
+from .tushare_rag import answer_tushare_question, build_dynamic_chunks as build_tushare_dynamic_chunks, extract_tushare_entries_from_text
+from .tts_retention import archive_tts_file
 import qrcode
 
 
@@ -47,6 +57,189 @@ MANUAL_PAYMENT_NOTICE = (
     '支付方式是在网页端注册后根据网页二维码进行微信支付。支付后加本人微信 dreamsjtuai 发送付款截图，'
     '并提供咱们 TTS section 注册的邮箱，本人收到后会更改该邮箱的额度。有了额度就可以自动生成 TTS。'
 )
+TUSHARE_RELAY_BASE_URL = os.getenv('TUSHARE_RELAY_BASE_URL', 'http://127.0.0.1:8001').rstrip('/')
+TARDIS_SUPERADMIN_SESSION_KEY = 'tardis_superadmin_authed'
+TARDIS_SUPERADMIN_USERNAME = os.getenv('TARDIS_SUPERADMIN_USERNAME', 'zhanyuting')
+TARDIS_SUPERADMIN_PASSWORD = os.getenv('TARDIS_SUPERADMIN_PASSWORD', 'zhanyuting')
+TUSHARE_SUPERADMIN_SESSION_KEY = 'tushare_superadmin_authed'
+TUSHARE_SUPERADMIN_USERNAME = os.getenv('TUSHARE_SUPERADMIN_USERNAME', 'zhanyuting')
+TUSHARE_SUPERADMIN_PASSWORD = os.getenv('TUSHARE_SUPERADMIN_PASSWORD', 'zhanyuting')
+RELAY_HTTP_SESSION = requests.Session()
+RELAY_HTTP_SESSION.trust_env = False
+
+
+def _parse_json_mapping(raw_value: str) -> dict[str, str]:
+    if not raw_value:
+        return {}
+    try:
+        data = json.loads(raw_value)
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {str(key): '' if value is None else str(value) for key, value in data.items()}
+
+
+def _is_tardis_superadmin(request) -> bool:
+    return bool(request.session.get(TARDIS_SUPERADMIN_SESSION_KEY))
+
+
+def _get_tardis_rag_entries():
+    return list(TardisRagEntry.objects.filter(is_active=True).order_by('sort_order', '-updated_at', '-id'))
+
+
+def _is_tushare_superadmin(request) -> bool:
+    return bool(request.session.get(TUSHARE_SUPERADMIN_SESSION_KEY))
+
+
+def _get_tushare_rag_entries():
+    return list(TushareRagEntry.objects.filter(is_active=True).order_by('sort_order', '-updated_at', '-id'))
+
+
+def _get_api_relay_service(service_slug: str):
+    service = ApiRelayService.objects.filter(slug=service_slug, is_active=True).first()
+    if service_slug == 'tushare' and service is None:
+        service = ApiRelayService.objects.create(
+            slug='tushare',
+            name='Tushare Relay',
+            base_url=TUSHARE_RELAY_BASE_URL,
+            is_active=True,
+            require_api_key=True,
+            require_login=False,
+            require_manual_approval=True,
+            allowed_methods='GET,POST',
+            timeout_seconds=60,
+            public_path='/tushare/',
+            apply_url='/quant/tushare-pro-guide/',
+            description='Tushare 数据中继服务。网页登录拿权限的方式已取消，改为由超级管理员发放 API Key。',
+            example_paths='/health\n/daily/news\n/daily/000002.SZ/latest',
+            note='默认的 Tushare 数据转接服务',
+        )
+    return service
+
+
+def _get_user_api_relay_access(user, service):
+    if not user or not user.is_authenticated or service is None:
+        return None
+    access, _ = UserApiRelayAccess.objects.get_or_create(user=user, service=service)
+    return access
+
+
+def _user_can_access_api_relay(user, service) -> bool:
+    if service is None or not service.is_active:
+        return False
+    if not service.require_login:
+        return True
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_staff or user.is_superuser:
+        return True
+    if not service.require_manual_approval:
+        return True
+    access = _get_user_api_relay_access(user, service)
+    if not access or not access.is_enabled:
+        return False
+    if access.expires_at and timezone.now() >= access.expires_at:
+        return False
+    return True
+
+
+def _extract_api_key_from_request(request) -> str:
+    api_key = (
+        request.headers.get('X-API-Key')
+        or request.headers.get('X-Api-Key')
+        or request.META.get('HTTP_X_API_KEY')
+        or ''
+    ).strip()
+    if api_key:
+        return api_key
+    auth_header = (request.headers.get('Authorization') or request.META.get('HTTP_AUTHORIZATION') or '').strip()
+    if auth_header.lower().startswith('bearer '):
+        return auth_header[7:].strip()
+    return ''
+
+
+def _get_api_key_access(service, raw_api_key: str):
+    raw_api_key = (raw_api_key or '').strip()
+    if not raw_api_key:
+        return None
+    if '.' not in raw_api_key:
+        access = (
+            UserApiRelayAccess.objects.select_related('user', 'service')
+            .filter(service=service, api_key_prefix=raw_api_key)
+            .first()
+        )
+        if not access or not access.api_key_secret_hash:
+            return None
+        if not check_password(raw_api_key, access.api_key_secret_hash):
+            return None
+        return access
+    prefix, secret = raw_api_key.split('.', 1)
+    if not prefix or not secret:
+        return None
+    access = (
+        UserApiRelayAccess.objects.select_related('user', 'service')
+        .filter(service=service, api_key_prefix=prefix)
+        .first()
+    )
+    if not access or not access.api_key_secret_hash:
+        return None
+    if not check_password(secret, access.api_key_secret_hash):
+        return None
+    return access
+
+
+def _api_key_can_access_service(access, service) -> bool:
+    if not access or access.service_id != service.id:
+        return False
+    if not service.is_active:
+        return False
+    if not access.is_enabled:
+        return False
+    if service.require_manual_approval and not access.approved_at:
+        return False
+    if access.expires_at and timezone.now() >= access.expires_at:
+        return False
+    return True
+
+
+def _relay_path_allowed_for_service(service, relay_path: str) -> tuple[bool, str]:
+    normalized = (relay_path or '').lstrip('/')
+    if service.slug == 'tushare' and normalized.startswith('minute/'):
+        return False, '当前 Tushare relay 只开放非分钟数据接口；`minute/*` 不在本次权限范围内。'
+    return True, ''
+
+
+def _build_api_relay_service_cards(request):
+    services = list(ApiRelayService.objects.filter(is_active=True).order_by('name', 'slug'))
+    access_map = {}
+    if request.user.is_authenticated:
+        access_map = {
+            access.service_id: access
+            for access in UserApiRelayAccess.objects.select_related('service').filter(user=request.user)
+        }
+    cards = []
+    for service in services:
+        access = access_map.get(service.id)
+        approved = _user_can_access_api_relay(request.user, service)
+        example_lines = [line.strip() for line in (service.example_paths or '').splitlines() if line.strip()]
+        example_urls = [
+            request.build_absolute_uri(f'{service.public_url_path.rstrip("/")}{line if line.startswith("/") else "/" + line}')
+            for line in example_lines
+        ]
+        cards.append(
+            {
+                'service': service,
+                'access': access,
+                'approved': approved,
+                'status_label': '已开通' if approved else ('待管理员授权' if request.user.is_authenticated else '需先登录'),
+                'status_color': '#166534' if approved else '#9a3412',
+                'public_url_path': service.public_url_path,
+                'absolute_root_url': request.build_absolute_uri(service.public_url_path),
+                'example_urls': example_urls,
+            }
+        )
+    return cards
 
 COLUMN_PAGES = {
     'free_resources': {
@@ -336,14 +529,387 @@ def psychology_article_zebra_stress(request):
     return render(request, 'tools/psychology_article_zebra_stress.html')
 
 
+@ensure_csrf_cookie
 def quant_article_tardis(request):
     """量化资源专栏文章：TARDIS 数据指南"""
-    return render(request, 'tools/quant_article_tardis.html')
+    context = {
+        'tardis_admin_logged_in': _is_tardis_superadmin(request),
+        'tardis_rag_entries': TardisRagEntry.objects.order_by('sort_order', '-updated_at', '-id')[:50],
+        'tardis_superadmin_username': TARDIS_SUPERADMIN_USERNAME,
+    }
+    return render(request, 'tools/quant_article_tardis.html', context)
 
 
+def quant_article_tardis_rag(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'method_not_allowed'}, status=405)
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'invalid_json', 'message': '请求体需要是合法 JSON。'}, status=400)
+    question = str(payload.get('question', '')).strip()
+    result = answer_tardis_question(question, extra_chunks=build_dynamic_chunks(_get_tardis_rag_entries()))
+    status = 200 if result.get('ok', True) else 400
+    return JsonResponse(result, status=status)
+
+
+@require_POST
+def tardis_superadmin_login(request):
+    username = request.POST.get('username', '').strip()
+    password = request.POST.get('password', '').strip()
+    if username == TARDIS_SUPERADMIN_USERNAME and password == TARDIS_SUPERADMIN_PASSWORD:
+        request.session[TARDIS_SUPERADMIN_SESSION_KEY] = True
+        request.session.modified = True
+        return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False, 'error': 'invalid_credentials', 'message': '账号或密码错误。'}, status=403)
+
+
+@require_POST
+def tardis_superadmin_logout(request):
+    request.session.pop(TARDIS_SUPERADMIN_SESSION_KEY, None)
+    request.session.modified = True
+    return JsonResponse({'ok': True})
+
+
+@require_POST
+def tardis_superadmin_save_entry(request):
+    if not _is_tardis_superadmin(request):
+        return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'invalid_json'}, status=400)
+
+    source_text = str(payload.get('source_text', '')).strip()
+    if source_text:
+        try:
+            start_sort = int(payload.get('sort_order') or 100)
+        except (TypeError, ValueError):
+            start_sort = 100
+        extra_keywords = str(payload.get('keywords', '')).strip()
+        parsed_entries = extract_tardis_entries_from_text(
+            source_text,
+            start_sort=start_sort,
+            extra_keywords=extra_keywords,
+        )
+        if not parsed_entries:
+            return JsonResponse(
+                {'ok': False, 'error': 'empty_extraction', 'message': '这段文字里暂时没提取出可用语料，请换更完整的历史答复内容。'},
+                status=400,
+            )
+        created_entries = []
+        for item in parsed_entries:
+            entry = TardisRagEntry.objects.create(**item)
+            created_entries.append(
+                {
+                    'id': entry.id,
+                    'title': entry.title,
+                    'question_hint': entry.question_hint,
+                    'answer': entry.answer,
+                    'keywords': entry.keywords,
+                    'sort_order': entry.sort_order,
+                    'is_active': entry.is_active,
+                    'updated_at': entry.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                }
+            )
+        return JsonResponse({'ok': True, 'created_count': len(created_entries), 'entries': created_entries})
+
+    title = str(payload.get('title', '')).strip()
+    answer = str(payload.get('answer', '')).strip()
+    if not title or not answer:
+        return JsonResponse({'ok': False, 'error': 'missing_fields', 'message': '请填写历史原文，或手动填写标题和回答内容。'}, status=400)
+
+    entry_id = payload.get('id')
+    entry = TardisRagEntry.objects.filter(id=entry_id).first() if entry_id else TardisRagEntry()
+    if entry_id and entry is None:
+        return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
+
+    entry.title = title
+    merged_title = str(payload.get('title', '')).strip()
+    entry.question_hint = merged_title
+    entry.answer = answer
+    entry.keywords = str(payload.get('keywords', '')).strip()
+    try:
+        entry.sort_order = int(payload.get('sort_order') or 100)
+    except (TypeError, ValueError):
+        entry.sort_order = 100
+    entry.is_active = bool(payload.get('is_active', True))
+    entry.save()
+    return JsonResponse(
+        {
+            'ok': True,
+            'entry': {
+                'id': entry.id,
+                'title': entry.title,
+                'question_hint': entry.question_hint,
+                'answer': entry.answer,
+                'keywords': entry.keywords,
+                'sort_order': entry.sort_order,
+                'is_active': entry.is_active,
+                'updated_at': entry.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        }
+    )
+
+
+@require_POST
+def tardis_superadmin_delete_entry(request, entry_id: int):
+    if not _is_tardis_superadmin(request):
+        return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+    entry = TardisRagEntry.objects.filter(id=entry_id).first()
+    if entry is None:
+        return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
+    entry.delete()
+    return JsonResponse({'ok': True})
+
+
+@ensure_csrf_cookie
 def quant_article_tushare(request):
     """量化资源专栏文章：Tushare Pro 数据权限说明"""
-    return render(request, 'tools/quant_article_tushare.html')
+    service = _get_api_relay_service('tushare')
+    catalog_data, catalog_error = _get_tushare_catalog_payload()
+    context = {
+        'tushare_service': service,
+        'tushare_example_url': '/tushare/daily/000002.SZ/latest',
+        'tushare_example_curl': 'curl -H "X-API-Key: <your-api-key>" https://ai-tool.indevs.in/tushare/daily/000002.SZ/latest',
+        'tushare_catalog': catalog_data,
+        'tushare_catalog_error': catalog_error,
+        'tushare_admin_logged_in': _is_tushare_superadmin(request),
+        'tushare_rag_entries': TushareRagEntry.objects.order_by('sort_order', '-updated_at', '-id')[:50],
+        'tushare_superadmin_username': TUSHARE_SUPERADMIN_USERNAME,
+    }
+    return render(request, 'tools/quant_article_tushare.html', context)
+
+
+def quant_article_tushare_rag(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'method_not_allowed'}, status=405)
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'invalid_json', 'message': '请求体需要是合法 JSON。'}, status=400)
+    question = str(payload.get('question', '')).strip()
+    result = answer_tushare_question(question, extra_chunks=build_tushare_dynamic_chunks(_get_tushare_rag_entries()))
+    status = 200 if result.get('ok', True) else 400
+    return JsonResponse(result, status=status)
+
+
+@require_POST
+def tushare_superadmin_login(request):
+    username = request.POST.get('username', '').strip()
+    password = request.POST.get('password', '').strip()
+    if username == TUSHARE_SUPERADMIN_USERNAME and password == TUSHARE_SUPERADMIN_PASSWORD:
+        request.session[TUSHARE_SUPERADMIN_SESSION_KEY] = True
+        request.session.modified = True
+        return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False, 'error': 'invalid_credentials', 'message': '账号或密码错误。'}, status=403)
+
+
+@require_POST
+def tushare_superadmin_logout(request):
+    request.session.pop(TUSHARE_SUPERADMIN_SESSION_KEY, None)
+    request.session.modified = True
+    return JsonResponse({'ok': True})
+
+
+@require_POST
+def tushare_superadmin_save_entry(request):
+    if not _is_tushare_superadmin(request):
+        return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+    try:
+        payload = json.loads(request.body.decode('utf-8') or '{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'ok': False, 'error': 'invalid_json'}, status=400)
+
+    source_text = str(payload.get('source_text', '')).strip()
+    if source_text:
+        try:
+            start_sort = int(payload.get('sort_order') or 100)
+        except (TypeError, ValueError):
+            start_sort = 100
+        extra_keywords = str(payload.get('keywords', '')).strip()
+        parsed_entries = extract_tushare_entries_from_text(source_text, start_sort=start_sort, extra_keywords=extra_keywords)
+        if not parsed_entries:
+            return JsonResponse(
+                {'ok': False, 'error': 'empty_extraction', 'message': '这段文字里暂时没提取出可用语料，请换更完整的历史答复内容。'},
+                status=400,
+            )
+        created_entries = []
+        for item in parsed_entries:
+            entry = TushareRagEntry.objects.create(**item)
+            created_entries.append(
+                {
+                    'id': entry.id,
+                    'title': entry.title,
+                    'question_hint': entry.question_hint,
+                    'answer': entry.answer,
+                    'keywords': entry.keywords,
+                    'sort_order': entry.sort_order,
+                    'is_active': entry.is_active,
+                    'updated_at': entry.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+                }
+            )
+        return JsonResponse({'ok': True, 'created_count': len(created_entries), 'entries': created_entries})
+
+    title = str(payload.get('title', '')).strip()
+    answer = str(payload.get('answer', '')).strip()
+    if not title or not answer:
+        return JsonResponse({'ok': False, 'error': 'missing_fields', 'message': '请填写历史原文，或手动填写标题和回答内容。'}, status=400)
+
+    entry_id = payload.get('id')
+    entry = TushareRagEntry.objects.filter(id=entry_id).first() if entry_id else TushareRagEntry()
+    if entry_id and entry is None:
+        return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
+    entry.title = title
+    entry.question_hint = title
+    entry.answer = answer
+    entry.keywords = str(payload.get('keywords', '')).strip()
+    try:
+        entry.sort_order = int(payload.get('sort_order') or 100)
+    except (TypeError, ValueError):
+        entry.sort_order = 100
+    entry.is_active = bool(payload.get('is_active', True))
+    entry.save()
+    return JsonResponse(
+        {
+            'ok': True,
+            'entry': {
+                'id': entry.id,
+                'title': entry.title,
+                'question_hint': entry.question_hint,
+                'answer': entry.answer,
+                'keywords': entry.keywords,
+                'sort_order': entry.sort_order,
+                'is_active': entry.is_active,
+                'updated_at': entry.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+        }
+    )
+
+
+@require_POST
+def tushare_superadmin_delete_entry(request, entry_id: int):
+    if not _is_tushare_superadmin(request):
+        return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+    entry = TushareRagEntry.objects.filter(id=entry_id).first()
+    if entry is None:
+        return JsonResponse({'ok': False, 'error': 'not_found'}, status=404)
+    entry.delete()
+    return JsonResponse({'ok': True})
+
+
+def _get_tushare_catalog_payload():
+    catalog_data = {}
+    catalog_error = ''
+    try:
+        upstream = RELAY_HTTP_SESSION.get(
+            f'{TUSHARE_RELAY_BASE_URL}/pro/catalog',
+            timeout=(3, 8),
+        )
+        if upstream.ok:
+            catalog_data = upstream.json()
+        else:
+            catalog_error = f'catalog_unavailable:{upstream.status_code}'
+    except requests.RequestException as exc:
+        catalog_error = f'catalog_unavailable:{exc}'
+    examples = catalog_data.get('examples')
+    if isinstance(examples, dict):
+        for _, items in examples.items():
+            if not isinstance(items, list):
+                continue
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                example_url = str(item.get('example_url') or '')
+                params = item.get('params') if isinstance(item.get('params'), dict) else {}
+                api_name = str(item.get('api_name') or '')
+                fields = str(item.get('fields') or '').strip()
+                item['python_example'] = _build_tushare_python_example(api_name, example_url, params, fields)
+    return catalog_data, catalog_error
+
+
+def _build_tushare_python_example(api_name: str, example_url: str, params: dict, fields: str = '') -> str:
+    parsed = urlsplit(example_url or '')
+    path = parsed.path or example_url or ''
+    url = f'https://ai-tool.indevs.in/tushare{path}'
+    payload = dict(params or {})
+    if fields:
+        payload['fields'] = fields
+    payload_json = json.dumps(payload, ensure_ascii=False, indent=4)
+    return (
+        "import requests\n\n"
+        "API_KEY = \"<your-api-key>\"\n"
+        f"URL = \"{url}\"\n"
+        f"PARAMS = {payload_json}\n\n"
+        "session = requests.Session()\n"
+        "session.trust_env = False  # 不继承本机代理环境，避免 Clash/VPN 端口未开时报错\n\n"
+        "response = session.get(\n"
+        "    URL,\n"
+        "    headers={\"X-API-Key\": API_KEY},\n"
+        "    params=PARAMS,\n"
+        "    timeout=30,\n"
+        ")\n"
+        "response.raise_for_status()\n"
+        "data = response.json()\n"
+        f"print(\"api_name=\", \"{api_name}\")\n"
+        "print(\"count=\", data.get(\"count\"))\n"
+        "print(data)\n"
+    )
+
+
+def quant_tushare_catalog(request):
+    """Tushare Pro 目录页，适合浏览器搜索和复制示例。"""
+    catalog_data, catalog_error = _get_tushare_catalog_payload()
+    context = {
+        'tushare_catalog': catalog_data,
+        'tushare_catalog_error': catalog_error,
+    }
+    return render(request, 'tools/quant_tushare_catalog.html', context)
+
+
+def edge_inference_hub(request):
+    offers = EdgeInferenceOffer.objects.filter(is_active=True).order_by('sort_order', 'price', 'name')
+    submitted_request = None
+    request_form = EdgeInferenceRequestForm(
+        initial={
+            'contact_name': request.user.username if request.user.is_authenticated else '',
+            'email': request.user.email if request.user.is_authenticated else '',
+            'expected_concurrency': 1,
+            'expected_hours': 24,
+        }
+    )
+
+    if request.method == 'POST':
+        request_form = EdgeInferenceRequestForm(request.POST)
+        selected_offer = EdgeInferenceOffer.objects.filter(pk=request.POST.get('offer_id'), is_active=True).first()
+        if request_form.is_valid():
+            submitted_request = request_form.save(commit=False)
+            submitted_request.user = request.user if request.user.is_authenticated else None
+            submitted_request.offer = selected_offer
+            if request.user.is_authenticated:
+                submitted_request.contact_name = request.user.username or submitted_request.contact_name
+                submitted_request.email = request.user.email or submitted_request.email
+            submitted_request.save()
+            request_form = EdgeInferenceRequestForm(
+                initial={
+                    'contact_name': request.user.username if request.user.is_authenticated else '',
+                    'email': request.user.email if request.user.is_authenticated else '',
+                    'expected_concurrency': 1,
+                    'expected_hours': 24,
+                }
+            )
+
+    context = {
+        'offers': offers,
+        'request_form': request_form,
+        'submitted_request': submitted_request,
+        'recent_requests': EdgeInferenceRequest.objects.select_related('offer').order_by('-created_at')[:8],
+        'my_requests': (
+            EdgeInferenceRequest.objects.select_related('offer').filter(user=request.user).order_by('-created_at')[:10]
+            if request.user.is_authenticated else []
+        ),
+    }
+    return render(request, 'tools/edge_inference_hub.html', context)
 
 
 def side_hustle_japan_goods(request):
@@ -641,6 +1207,27 @@ def _build_qr_data_uri(content: str) -> str:
     return f"data:image/png;base64,{b64encode(buf.getvalue()).decode('utf-8')}"
 
 
+def _build_recent_tts_orders(user, limit=10):
+    base_qs = user.tts_orders.order_by('-created_at')
+    active_orders = list(
+        user.tts_orders.filter(
+            status__in=[TTSOrder.Status.GENERATING, TTSOrder.Status.QUEUED]
+        ).order_by('-updated_at', '-created_at')
+    )
+    recent_orders = list(base_qs[:limit])
+    merged_orders = []
+    seen_order_ids = set()
+
+    for order in active_orders + recent_orders:
+        if order.pk in seen_order_ids:
+            continue
+        merged_orders.append(order)
+        seen_order_ids.add(order.pk)
+        if len(merged_orders) >= limit:
+            break
+    return merged_orders
+
+
 @transaction.atomic
 def _create_credit_tts_order(user, form):
     account = TTSCreditAccount.objects.select_for_update().get(pk=_get_credit_account(user).pk)
@@ -692,6 +1279,62 @@ def _create_credit_tts_order(user, form):
         note=f'TTS 提交{"（无限额度用户，不扣余额）" if account.is_unlimited else ""}，记录 {char_count} 字',
     )
     return order
+
+
+@transaction.atomic
+def _create_regenerated_tts_order(user, original_order):
+    account = TTSCreditAccount.objects.select_for_update().get(pk=_get_credit_account(user).pk)
+    source_text = (original_order.source_text or '').strip()
+    char_count = len(source_text)
+    if not source_text or char_count <= 0:
+        return None, 'empty_source'
+
+    if account.is_unlimited:
+        balance_after = account.char_balance
+    else:
+        remaining_quota = max(account.total_purchased_chars - account.total_used_chars, 0)
+        available_chars = min(account.char_balance, remaining_quota)
+        if char_count > available_chars:
+            return None, 'insufficient_quota'
+        account.char_balance = available_chars - char_count
+        balance_after = account.char_balance
+
+    account.total_used_chars += char_count
+    account.save(update_fields=['char_balance', 'total_used_chars', 'updated_at'])
+
+    now = timezone.now()
+    new_order = TTSOrder.objects.create(
+        user=user,
+        contact_name=user.username,
+        email=user.email or original_order.email or f'{user.username}@local.invalid',
+        wechat='',
+        company='',
+        source_text=source_text,
+        voice_preset=original_order.voice_preset,
+        style_notes=original_order.style_notes,
+        business_usage=True,
+        delivery_format=original_order.delivery_format,
+        estimated_price=Decimal('0.00'),
+        final_price=Decimal('0.00'),
+        payment_status=TTSOrder.PaymentStatus.PAID,
+        status=TTSOrder.Status.QUEUED,
+        payment_provider='',
+        payment_reference=f'CREDIT-REGEN-{now:%Y%m%d%H%M%S}',
+        paid_at=now,
+        payment_verified_at=now,
+        processing_log=f'{now:%F %T} 基于订单 {original_order.order_no} 重新生成，扣除 {char_count} 字',
+    )
+    transaction.on_commit(lambda: trigger_tts_generation(new_order.order_no))
+
+    TTSCreditLedger.objects.create(
+        user=user,
+        entry_type=TTSCreditLedger.EntryType.CONSUME,
+        char_delta=-char_count,
+        balance_after=balance_after,
+        tts_order=new_order,
+        note=f'TTS 重新生成，来源订单 {original_order.order_no}，记录 {char_count} 字{"（无限额度用户，不扣余额）" if account.is_unlimited else ""}',
+    )
+    return new_order, 'ok'
 
 
 def tts_studio(request):
@@ -761,7 +1404,9 @@ def tts_studio(request):
         if value.get('selectable', True)
     ]
     account = _get_credit_account(request.user) if request.user.is_authenticated else None
-    recent_orders = request.user.tts_orders.order_by('-created_at')[:10] if request.user.is_authenticated else []
+    api_relay_cards = _build_api_relay_service_cards(request)
+    api_accesses = [card['access'] for card in api_relay_cards if card['access']]
+    recent_orders = _build_recent_tts_orders(request.user, limit=17) if request.user.is_authenticated else []
     recent_recharges = request.user.tts_recharge_orders.order_by('-created_at')[:10] if request.user.is_authenticated else []
     context = {
         'login_form': login_form,
@@ -778,10 +1423,19 @@ def tts_studio(request):
         'manual_payment_notice': MANUAL_PAYMENT_NOTICE,
         'auth_error': auth_error,
         'account': account,
+        'api_accesses': api_accesses,
+        'api_relay_cards': api_relay_cards,
         'recent_orders': recent_orders,
         'recent_recharges': recent_recharges,
     }
     return render(request, 'tools/tts_studio.html', context)
+
+
+def api_relay_hub(request):
+    context = {
+        'api_relay_cards': _build_api_relay_service_cards(request),
+    }
+    return render(request, 'tools/api_relay_hub.html', context)
 
 
 @login_required(login_url='tts_studio')
@@ -831,6 +1485,8 @@ def tts_recharge_status(request, order_no):
 def tts_order_submitted(request, order_no):
     """TTS 订单提交成功页"""
     order = get_object_or_404(TTSOrder, order_no=order_no)
+    _expire_order_output_if_needed(order)
+    order.refresh_from_db()
     tier_name = build_quote(order.char_count, order.business_usage)[1]
     context = {
         'order': order,
@@ -843,6 +1499,7 @@ def tts_order_submitted(request, order_no):
         'proof_form': TTSPaymentProofForm(instance=order),
         'manual_payment_notice': MANUAL_PAYMENT_NOTICE,
         'can_cancel': order.status in {TTSOrder.Status.QUEUED, TTSOrder.Status.GENERATING},
+        'can_regenerate': bool(order.user_id and order.status in {TTSOrder.Status.DELIVERED, TTSOrder.Status.CANCELLED}),
     }
     return render(request, 'tools/tts_order_submitted.html', context)
 
@@ -860,6 +1517,8 @@ def tts_order_query(request):
         if order is None:
             form.add_error(None, '没有找到匹配的订单，请检查订单号和邮箱。')
         else:
+            _expire_order_output_if_needed(order)
+            order.refresh_from_db()
             proof_form = TTSPaymentProofForm(instance=order)
 
     context = {
@@ -871,8 +1530,28 @@ def tts_order_query(request):
         'sales_wechat': os.getenv('TTS_SALES_WECHAT', 'dreamsjtuai'),
         'manual_payment_notice': MANUAL_PAYMENT_NOTICE,
         'can_cancel': bool(order and order.status in {TTSOrder.Status.QUEUED, TTSOrder.Status.GENERATING}),
+        'can_regenerate': bool(order and order.user_id and order.status in {TTSOrder.Status.DELIVERED, TTSOrder.Status.CANCELLED}),
     }
     return render(request, 'tools/tts_order_query.html', context)
+
+
+def _expire_order_output_if_needed(order):
+    if not order.output_file or not order.is_output_expired:
+        return False
+    if getattr(order.output_file, 'path', ''):
+        try:
+            archive_tts_file(order, Path(order.output_file.path))
+        except Exception:
+            pass
+    file_name = order.output_file.name
+    order.output_file.delete(save=False)
+    timestamp = timezone.now().strftime('%F %T')
+    log_parts = [part for part in [order.processing_log.strip(), f'{timestamp} 交付文件已过期并清理: {file_name}'] if part]
+    order.output_file = ''
+    order.output_duration_seconds = None
+    order.processing_log = '\n'.join(log_parts)
+    order.save(update_fields=['output_file', 'output_duration_seconds', 'processing_log', 'updated_at'])
+    return True
 
 
 def tts_order_status(request, order_no):
@@ -880,6 +1559,9 @@ def tts_order_status(request, order_no):
     email = request.GET.get('email', '').strip()
     if not _can_access_order(request, order, email=email):
         return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+
+    _expire_order_output_if_needed(order)
+    order.refresh_from_db()
 
     progress = _build_order_progress(order)
     return JsonResponse(
@@ -898,11 +1580,167 @@ def tts_order_status(request, order_no):
             'elapsed_text': _build_order_elapsed(order)['elapsed_text'],
             'processing_log': order.processing_log,
             'cancel_requested': order.cancel_requested,
-            'output_file_url': '' if not order.output_file or order.is_output_expired else order.output_file.url,
+            'output_file_url': '' if not order.output_file or order.is_output_expired else f'/tts-studio/download/{order.order_no}/?email={email}',
             'output_expires_at': order.output_expires_at.isoformat() if order.output_expires_at else '',
             'is_output_expired': order.is_output_expired,
         }
     )
+
+
+def tts_download_order_output(request, order_no):
+    order = get_object_or_404(TTSOrder, order_no=order_no)
+    email = request.GET.get('email', '').strip()
+    if not _can_access_order(request, order, email=email):
+        return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+    _expire_order_output_if_needed(order)
+    order.refresh_from_db()
+    if not order.output_file or order.is_output_expired:
+        raise Http404('音频已过期或不存在')
+    response = FileResponse(open(order.output_file.path, 'rb'), as_attachment=True, filename=os.path.basename(order.output_file.name))
+    return response
+
+
+def api_relay_proxy(request, service_slug: str, relay_path: str = ''):
+    service = _get_api_relay_service(service_slug)
+    if service is None:
+        raise Http404('Relay service not found')
+    allowed, deny_message = _relay_path_allowed_for_service(service, relay_path)
+    if not allowed:
+        return JsonResponse(
+            {
+                'ok': False,
+                'error': 'path_not_allowed',
+                'message': deny_message,
+                'apply_url': service.apply_url or '/api-relay/',
+            },
+            status=403,
+        )
+    if request.method.upper() not in service.allowed_method_set:
+        return JsonResponse(
+            {
+                'ok': False,
+                'error': 'method_not_allowed',
+                'message': f'当前服务不允许 {request.method.upper()} 方法。',
+            },
+            status=405,
+        )
+    access = None
+    upstream_user = request.user if request.user.is_authenticated else None
+    if service.require_api_key:
+        raw_api_key = _extract_api_key_from_request(request)
+        if not raw_api_key:
+            return JsonResponse(
+                {
+                    'ok': False,
+                    'error': 'api_key_required',
+                    'message': f'访问 {service.name} 必须在请求头里携带有效的 X-API-Key。',
+                    'apply_url': service.apply_url or '/api-relay/',
+                },
+                status=401,
+            )
+        access = _get_api_key_access(service, raw_api_key)
+        if access is None:
+            return JsonResponse(
+                {
+                    'ok': False,
+                    'error': 'invalid_api_key',
+                    'message': f'你提供的 API Key 无效，或不属于 {service.name}。',
+                    'apply_url': service.apply_url or '/api-relay/',
+                },
+                status=403,
+            )
+        if not _api_key_can_access_service(access, service):
+            return JsonResponse(
+                {
+                    'ok': False,
+                    'error': 'permission_denied',
+                    'message': f'该 API Key 尚未开通 {service.name} 的访问权限，或权限已过期。',
+                    'apply_url': service.apply_url or '/api-relay/',
+                },
+                status=403,
+            )
+        upstream_user = access.user
+    else:
+        if service.require_login and not request.user.is_authenticated:
+            return JsonResponse(
+                {
+                    'ok': False,
+                    'error': 'login_required',
+                    'message': '访问该 API 前请先在站内注册并登录。',
+                    'apply_url': service.apply_url or '/api-relay/',
+                },
+                status=401,
+            )
+        if not _user_can_access_api_relay(request.user, service):
+            return JsonResponse(
+                {
+                    'ok': False,
+                    'error': 'permission_denied',
+                    'message': f'你的账号尚未开通 {service.name} 的访问权限。请先注册登录，并等待后台授权。',
+                    'apply_url': service.apply_url or '/api-relay/',
+                },
+                status=403,
+            )
+
+    upstream_base = service.base_url.rstrip('/')
+    upstream_url = f'{upstream_base}/{relay_path.lstrip("/")}' if relay_path else f'{upstream_base}/'
+    upstream_params = dict(request.GET.items())
+    upstream_params.update(_parse_json_mapping(service.upstream_query_params))
+    upstream_headers = {
+        key: value
+        for key, value in request.headers.items()
+        if key.lower() not in {'host', 'content-length', 'connection', 'cookie', 'authorization'}
+    }
+    upstream_headers.update(_parse_json_mapping(service.upstream_headers))
+    if upstream_user is not None:
+        upstream_headers['X-Ai-Tools-User-Id'] = str(upstream_user.id)
+        upstream_headers['X-Ai-Tools-Username'] = upstream_user.username
+        upstream_headers['X-Ai-Tools-User-Email'] = upstream_user.email or ''
+    upstream_headers['X-Ai-Tools-Relay-Service'] = service.slug
+    try:
+        upstream = RELAY_HTTP_SESSION.request(
+            method=request.method,
+            url=upstream_url,
+            params=upstream_params,
+            data=request.body if request.method not in {'GET', 'HEAD'} else None,
+            headers=upstream_headers,
+            timeout=(5, max(int(service.timeout_seconds or 60), 5)),
+        )
+    except requests.RequestException as exc:
+        return JsonResponse(
+            {
+                'ok': False,
+                'error': 'relay_unavailable',
+                'message': f'{service.name} 不可用: {exc}',
+            },
+            status=503,
+        )
+
+    hop_by_hop_headers = {
+        'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization',
+        'te', 'trailers', 'transfer-encoding', 'upgrade', 'content-encoding',
+    }
+    response = HttpResponse(
+        upstream.content,
+        status=upstream.status_code,
+        content_type=upstream.headers.get('Content-Type', 'application/octet-stream'),
+    )
+    for key, value in upstream.headers.items():
+        if key.lower() in hop_by_hop_headers or key.lower() == 'content-length':
+            continue
+        response[key] = value
+    response['X-Api-Relay-Service'] = service.slug
+    response['X-Api-Relay-Upstream'] = upstream_base
+    return response
+
+
+def tushare_proxy(request, relay_path: str = ''):
+    normalized = (relay_path or '').strip('/')
+    accept = (request.headers.get('Accept') or '').lower()
+    wants_html = request.method == 'GET' and 'text/html' in accept and not _extract_api_key_from_request(request)
+    if normalized == 'pro/catalog' and wants_html:
+        return quant_tushare_catalog(request)
+    return api_relay_proxy(request, 'tushare', relay_path)
 
 
 def tts_cancel_order(request, order_no):
@@ -931,6 +1769,37 @@ def tts_cancel_order(request, order_no):
             'cancel_requested': updated.cancel_requested,
         },
         status=200 if result in {'already_cancelled', 'cancelled', 'force_cancelled'} else 400,
+    )
+
+
+def tts_regenerate_order(request, order_no):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'method_not_allowed'}, status=405)
+
+    order = get_object_or_404(TTSOrder, order_no=order_no)
+    email = request.POST.get('email', '').strip()
+    if not _can_access_order(request, order, email=email):
+        return JsonResponse({'ok': False, 'error': 'forbidden'}, status=403)
+    if not order.user_id:
+        return JsonResponse({'ok': False, 'error': 'user_required', 'message': '当前订单不支持重新生成。'}, status=400)
+    if order.status not in {TTSOrder.Status.DELIVERED, TTSOrder.Status.CANCELLED}:
+        return JsonResponse({'ok': False, 'error': 'not_ready', 'message': '当前状态暂不支持重新生成。'}, status=400)
+
+    new_order, result = _create_regenerated_tts_order(order.user, order)
+    if result == 'insufficient_quota':
+        return JsonResponse({'ok': False, 'error': 'insufficient_quota', 'message': '当前额度不足，不能重新生成这条订单。'}, status=400)
+    if result == 'empty_source':
+        return JsonResponse({'ok': False, 'error': 'empty_source', 'message': '原订单没有可重新生成的文本内容。'}, status=400)
+    if new_order is None:
+        return JsonResponse({'ok': False, 'error': 'unknown_error', 'message': '重新生成失败。'}, status=500)
+
+    return JsonResponse(
+        {
+            'ok': True,
+            'message': f'已创建新的重新生成订单 {new_order.order_no}',
+            'new_order_no': new_order.order_no,
+            'redirect_url': f'/tts-studio/submitted/{new_order.order_no}/',
+        }
     )
 
 
@@ -1183,6 +2052,10 @@ def tool_detail(request, slug):
 
     context = {
         'tool': tool,
+        'tool_full_description_html': markdown.markdown(
+            tool.full_description or '',
+            extensions=['extra', 'nl2br', 'sane_lists'],
+        ),
         'related_tools': recommended_tools,
     }
     return render(request, 'tools/tool_detail.html', context)

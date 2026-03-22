@@ -324,6 +324,15 @@ class QwenTTSRuntime:
         self.ffmpeg_bin = ffmpeg_bin
         self.tts = None
 
+    def prepare_text(self, text: str) -> tuple[str, list[str], int]:
+        normalized_text = sanitize_text_for_tts(text)
+        direct_max_chars = min(self.max_batch_chars, get_tts_runtime_rules()['direct_max_chars'])
+        if len(normalized_text) <= direct_max_chars:
+            chunks = [normalized_text] if normalized_text else []
+        else:
+            chunks = split_text(normalized_text, self.max_chars)
+        return normalized_text, chunks, direct_max_chars
+
     def _torch_dtype(self):
         return {
             'bfloat16': torch.bfloat16,
@@ -403,14 +412,32 @@ class QwenTTSRuntime:
         batch_index=None,
         total_batches=None,
     ):
-        if progress_callback and len(batch_chunks) > 1:
-            progress_callback(
-                'batch_fallback',
-                batch_index=batch_index,
-                total_batches=total_batches,
-                items=len(batch_chunks),
-                reason='serial_chunk_generation',
-            )
+        self._reset_tts_inference_state(tts)
+        if len(batch_chunks) > 1:
+            try:
+                wavs, sample_rate = tts.generate_custom_voice(
+                    text=batch_chunks,
+                    language=[language] * len(batch_chunks),
+                    speaker=[speaker] * len(batch_chunks),
+                    instruct=[instruct] * len(batch_chunks),
+                    non_streaming_mode=True,
+                    max_new_tokens=max_new_tokens,
+                )
+                if len(wavs) != len(batch_chunks):
+                    raise RuntimeError(
+                        f'batch generation returned {len(wavs)} wavs for {len(batch_chunks)} chunks'
+                    )
+                return wavs, sample_rate
+            except Exception as exc:
+                if progress_callback:
+                    progress_callback(
+                        'batch_fallback',
+                        batch_index=batch_index,
+                        total_batches=total_batches,
+                        items=len(batch_chunks),
+                        reason=f'batch_generation_error:{exc.__class__.__name__}',
+                    )
+
         all_wavs = []
         sample_rate = None
         for chunk in batch_chunks:
@@ -432,6 +459,67 @@ class QwenTTSRuntime:
             raise RuntimeError('serial generation returned no audio')
         return all_wavs, sample_rate
 
+    def generate_batch_items(
+        self,
+        *,
+        items,
+        progress_callback=None,
+        batch_index=None,
+        total_batches=None,
+    ):
+        if not items:
+            return [], 0
+
+        tts = self.load()
+        self._reset_tts_inference_state(tts)
+
+        if len(items) > 1:
+            try:
+                wavs, sample_rate = tts.generate_custom_voice(
+                    text=[item['text'] for item in items],
+                    language=[item['language'] for item in items],
+                    speaker=[item['speaker'] for item in items],
+                    instruct=[item['instruct'] for item in items],
+                    non_streaming_mode=True,
+                    max_new_tokens=max(item['max_new_tokens'] for item in items),
+                )
+                if len(wavs) != len(items):
+                    raise RuntimeError(f'batch generation returned {len(wavs)} wavs for {len(items)} items')
+                return list(wavs), sample_rate
+            except Exception as exc:
+                if progress_callback:
+                    progress_callback(
+                        'batch_fallback',
+                        batch_index=batch_index,
+                        total_batches=total_batches,
+                        items=len(items),
+                        reason=f'batch_generation_error:{exc.__class__.__name__}',
+                    )
+
+        sample_rate = None
+        results = []
+        for item in items:
+            self._reset_tts_inference_state(tts)
+            try:
+                wavs, current_sr = tts.generate_custom_voice(
+                    text=[item['text']],
+                    language=item['language'],
+                    speaker=item['speaker'],
+                    instruct=item['instruct'],
+                    non_streaming_mode=True,
+                    max_new_tokens=item['max_new_tokens'],
+                )
+                if len(wavs) != 1:
+                    raise RuntimeError(f'serial generation returned {len(wavs)} wavs for one item')
+                if sample_rate is None:
+                    sample_rate = current_sr
+                elif sample_rate != current_sr:
+                    raise RuntimeError(f'inconsistent sample rate in serial generation: {sample_rate} != {current_sr}')
+                results.append(wavs[0])
+            except Exception as exc:
+                results.append(exc)
+        return results, sample_rate or 0
+
     def synthesize_to_file(
         self,
         *,
@@ -444,12 +532,7 @@ class QwenTTSRuntime:
         progress_callback=None,
         should_cancel=None,
     ) -> tuple[int, int]:
-        normalized_text = sanitize_text_for_tts(text)
-        direct_max_chars = min(self.max_batch_chars, get_tts_runtime_rules()['direct_max_chars'])
-        if len(normalized_text) <= direct_max_chars:
-            chunks = [normalized_text] if normalized_text else []
-        else:
-            chunks = split_text(normalized_text, self.max_chars)
+        normalized_text, chunks, direct_max_chars = self.prepare_text(text)
         batches = plan_batches(chunks, self.batch_size, self.max_batch_chars)
         total_chars = len(normalized_text)
 

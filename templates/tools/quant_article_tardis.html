@@ -1,12 +1,158 @@
 {% extends 'base.html' %}
 
 {% block title %}TARDIS 数据低价获取指南 | 量化资源专栏{% endblock %}
-{% block meta_description %}TARDIS 数据低价获取指南：为什么高频更需要 TARDIS，套餐价格、Deribit 与 Binance 历史数据报价、二维码与联系方式。{% endblock %}
+{% block meta_description %}TARDIS 数据低价获取指南：为什么高频更需要 TARDIS，套餐价格、Deribit 与 Binance 历史和实时数据覆盖、二维码与联系方式。{% endblock %}
 
 {% block content %}
 <div style="margin-bottom: 20px;">
   <a href="{% url 'quant_column' %}" style="color:#2563eb;text-decoration:none;">← 返回量化资源专栏</a>
 </div>
+
+<style>
+  .tardis-rag-shell { margin: 0 0 22px; border: 1px solid #fed7aa; border-radius: 20px; background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%); box-shadow: 0 24px 48px -32px rgba(194, 65, 12, .35); overflow: hidden; }
+  .tardis-rag-head { padding: 20px 22px 16px; border-bottom: 1px solid #fed7aa; }
+  .tardis-rag-badge { display: inline-flex; align-items: center; gap: 8px; background: #7c2d12; color: #fff; border-radius: 999px; padding: 6px 12px; font-size: .85rem; font-weight: 700; }
+  .tardis-rag-chat { padding: 18px 22px; display: grid; gap: 14px; max-height: 460px; overflow-y: auto; background: rgba(255,255,255,.82); }
+  .tardis-rag-msg { max-width: 88%; padding: 14px 16px; border-radius: 18px; line-height: 1.8; white-space: pre-wrap; }
+  .tardis-rag-msg.bot { background: #fff; border: 1px solid #fde68a; color: #7c2d12; justify-self: start; }
+  .tardis-rag-msg.user { background: #7c2d12; color: #fff; justify-self: end; }
+  .tardis-rag-foot { padding: 18px 22px 22px; border-top: 1px solid #ffedd5; background: #fff; }
+  .tardis-rag-quick { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .tardis-rag-quick button { border: 1px solid #fdba74; background: #fff7ed; color: #9a3412; border-radius: 999px; padding: 8px 12px; cursor: pointer; font: inherit; }
+  .tardis-rag-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; }
+  .tardis-rag-input { width: 100%; border: 1px solid #fdba74; border-radius: 14px; padding: 14px 16px; font: inherit; }
+  .tardis-rag-submit { border: none; border-radius: 14px; background: linear-gradient(135deg, #9a3412 0%, #ea580c 100%); color: #fff; padding: 0 18px; font: inherit; font-weight: 700; cursor: pointer; }
+  .tardis-rag-note { margin-top: 10px; color: #78716c; font-size: .92rem; }
+  .tardis-admin-shell { margin: 0 0 24px; border: 1px solid #bfdbfe; border-radius: 20px; background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); overflow: hidden; box-shadow: 0 20px 44px -30px rgba(37, 99, 235, .35); }
+  .tardis-admin-head { padding: 18px 22px; border-bottom: 1px solid #dbeafe; }
+  .tardis-admin-body { padding: 18px 22px 22px; display: grid; gap: 16px; }
+  .tardis-admin-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tardis-admin-grid-single { display: grid; gap: 12px; }
+  .tardis-admin-input, .tardis-admin-textarea { width: 100%; border: 1px solid #93c5fd; border-radius: 14px; padding: 12px 14px; font: inherit; background: #fff; }
+  .tardis-admin-textarea { min-height: 140px; resize: vertical; }
+  .tardis-admin-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tardis-admin-btn { border: none; border-radius: 12px; background: #2563eb; color: #fff; padding: 12px 16px; cursor: pointer; font: inherit; font-weight: 700; }
+  .tardis-admin-btn.secondary { background: #e2e8f0; color: #0f172a; }
+  .tardis-admin-list { display: grid; gap: 10px; }
+  .tardis-admin-item { border: 1px solid #dbeafe; border-radius: 14px; background: #fff; padding: 14px; }
+  .tardis-admin-meta { color: #64748b; font-size: .9rem; margin-top: 6px; }
+  .tardis-admin-status { color: #1d4ed8; font-size: .92rem; }
+  @media (max-width: 720px) {
+    .tardis-rag-form { grid-template-columns: 1fr; }
+    .tardis-rag-submit { min-height: 48px; }
+    .tardis-rag-msg { max-width: 100%; }
+    .tardis-admin-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<section class="tardis-admin-shell">
+  <div class="tardis-admin-head">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#2563eb;color:#fff;border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:700;">超级管理员 · 客服语料</div>
+        <h2 style="margin:12px 0 6px;font-size:1.45rem;color:#1e3a8a;">把历史问题和解答直接喂给 Tardis AI 客服</h2>
+        <p style="margin:0;color:#334155;line-height:1.8;">登录后可以新增、编辑、删除客服语料。新的问答保存后会立刻参与页面内检索。</p>
+      </div>
+      {% if tardis_admin_logged_in %}
+      <button id="tardis-admin-logout" type="button" class="tardis-admin-btn secondary">退出管理员</button>
+      {% endif %}
+    </div>
+  </div>
+  <div class="tardis-admin-body">
+    {% if not tardis_admin_logged_in %}
+    <form id="tardis-admin-login-form" class="tardis-admin-grid">
+      <div>
+        <label style="font-weight:700;display:block;margin-bottom:6px;">账号</label>
+        <input id="tardis-admin-username" class="tardis-admin-input" type="text" value="{{ tardis_superadmin_username }}" autocomplete="username">
+      </div>
+      <div>
+        <label style="font-weight:700;display:block;margin-bottom:6px;">密码</label>
+        <input id="tardis-admin-password" class="tardis-admin-input" type="password" value="" autocomplete="current-password" placeholder="输入超级管理员密码">
+      </div>
+      <div class="tardis-admin-actions" style="grid-column:1 / -1;">
+        <button type="submit" class="tardis-admin-btn">登录超级管理员</button>
+      </div>
+      <div id="tardis-admin-login-status" class="tardis-admin-status" style="grid-column:1 / -1;">默认账号是 `zhanyuting`。登录后才显示语料编辑区。</div>
+    </form>
+    {% else %}
+    <div class="tardis-admin-status">当前已登录超级管理员。直接粘贴一整段历史答复，我会自动拆成多条客服语料。</div>
+    <form id="tardis-admin-entry-form" class="tardis-admin-grid-single">
+      <div>
+        <label style="font-weight:700;display:block;margin-bottom:6px;">历史原文 / 长段语料</label>
+        <textarea id="tardis-source-text" class="tardis-admin-textarea" style="min-height:220px;" placeholder="直接粘贴一整段文字即可。支持纯说明文，也支持“问：... 答：...”这类格式。我会尽量自动提取出多个合适的问题和答案。"></textarea>
+        <div class="tardis-admin-meta">建议直接贴完整历史答复。系统会优先识别问答格式，其次按价格、覆盖范围、实时/历史、发货、联系方式、特价数据等主题自动拆分。</div>
+      </div>
+      <div class="tardis-admin-grid">
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:6px;">公共关键词</label>
+          <input id="tardis-entry-keywords" class="tardis-admin-input" type="text" maxlength="255" placeholder="可选，逗号分隔。会附加到每条自动提取结果上">
+        </div>
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:6px;">起始排序</label>
+          <input id="tardis-entry-sort-order" class="tardis-admin-input" type="number" value="100">
+        </div>
+      </div>
+      <div class="tardis-admin-actions">
+        <button type="submit" class="tardis-admin-btn">智能提取并保存</button>
+        <button id="tardis-entry-reset" type="button" class="tardis-admin-btn secondary">清空表单</button>
+      </div>
+      <div id="tardis-admin-save-status" class="tardis-admin-status"></div>
+    </form>
+
+    <div>
+      <h3 style="margin:8px 0 12px;color:#1e3a8a;">当前已录入语料</h3>
+      <div id="tardis-admin-entry-list" class="tardis-admin-list">
+        {% for entry in tardis_rag_entries %}
+        <div class="tardis-admin-item" data-entry-id="{{ entry.id }}">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+            <div>
+              <strong>{{ entry.title }}</strong>
+              <div class="tardis-admin-meta">问题提示：{{ entry.question_hint|default:"-" }}</div>
+              <div class="tardis-admin-meta">关键词：{{ entry.keywords|default:"-" }}</div>
+              <div class="tardis-admin-meta">排序：{{ entry.sort_order }} / 状态：{% if entry.is_active %}启用{% else %}关闭{% endif %}</div>
+            </div>
+            <div class="tardis-admin-actions">
+              <button type="button" class="tardis-admin-btn secondary" data-entry-delete="{{ entry.id }}">删除</button>
+            </div>
+          </div>
+          <div class="tardis-admin-meta" style="margin-top:10px;white-space:pre-wrap;color:#0f172a;">{{ entry.answer }}</div>
+        </div>
+        {% empty %}
+        <div class="tardis-admin-item" style="color:#64748b;">还没有录入自定义语料。你可以把历史问答直接贴进上面的表单。</div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="tardis-rag-shell">
+  <div class="tardis-rag-head">
+    <div class="tardis-rag-badge">在线客服 · 页面内 RAG</div>
+    <h2 style="margin:14px 0 8px; font-size:1.7rem; color:#7c2d12;">直接问这篇 TARDIS 指南</h2>
+    <p style="margin:0; color:#9a3412; line-height:1.8;">它会根据本文内容和超级管理员后续录入的历史知识库智能回答，适合问各种问题。</p>
+  </div>
+  <div id="tardis-rag-chat" class="tardis-rag-chat">
+    <div class="tardis-rag-msg bot">可以直接问我：
+1. TARDIS 有哪些数据类型？
+2. 包月多少钱？
+3. Deribit 和 Binance 特价数据怎么卖？
+4. 联系方式是什么？</div>
+  </div>
+  <div class="tardis-rag-foot">
+    <div class="tardis-rag-quick">
+      <button type="button" data-question="TARDIS 支持哪些数据类型？">支持哪些数据类型</button>
+      <button type="button" data-question="整月租用高档 API 多少钱？">包月多少钱</button>
+      <button type="button" data-question="Deribit 和 Binance 特价数据怎么卖？">特价数据怎么卖</button>
+      <button type="button" data-question="怎么联系你们拿数据？">怎么联系</button>
+    </div>
+    <form id="tardis-rag-form" class="tardis-rag-form">
+      <input id="tardis-rag-input" class="tardis-rag-input" type="text" maxlength="300" placeholder="输入你想问的问题">
+      <button id="tardis-rag-submit" class="tardis-rag-submit" type="submit">发送</button>
+    </form>
+    <div class="tardis-rag-note">当前客服是受控 RAG，不会脱离本页信息自由发挥。</div>
+  </div>
+</section>
 
 <article style="background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:32px; box-shadow:0 10px 25px rgba(2,6,23,.05);">
   <header style="border-bottom:1px solid #e5e7eb; padding-bottom:18px; margin-bottom:22px;">
@@ -56,6 +202,174 @@
     {% include "tools/_tardis_promo.html" %}
   </section>
 </article>
+
+<script>
+  (function () {
+    const chat = document.getElementById('tardis-rag-chat');
+    const form = document.getElementById('tardis-rag-form');
+    const input = document.getElementById('tardis-rag-input');
+    const submit = document.getElementById('tardis-rag-submit');
+    const quickButtons = document.querySelectorAll('[data-question]');
+    const endpoint = "{% url 'quant_article_tardis_rag' %}";
+    const adminLoginEndpoint = "{% url 'tardis_superadmin_login' %}";
+    const adminLogoutEndpoint = "{% url 'tardis_superadmin_logout' %}";
+    const adminSaveEndpoint = "{% url 'tardis_superadmin_save_entry' %}";
+    const adminDeletePathPrefix = "/quant/tardis-data-guide/admin/entries/";
+    const adminLoginForm = document.getElementById('tardis-admin-login-form');
+    const adminLoginStatus = document.getElementById('tardis-admin-login-status');
+    const adminLogoutButton = document.getElementById('tardis-admin-logout');
+    const entryForm = document.getElementById('tardis-admin-entry-form');
+    const entryList = document.getElementById('tardis-admin-entry-list');
+    const saveStatus = document.getElementById('tardis-admin-save-status');
+    const sourceTextInput = document.getElementById('tardis-source-text');
+    const entryKeywordsInput = document.getElementById('tardis-entry-keywords');
+    const entrySortOrderInput = document.getElementById('tardis-entry-sort-order');
+    const entryResetButton = document.getElementById('tardis-entry-reset');
+
+    function getCsrfToken() {
+      return (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+    }
+
+    function appendMessage(role, text) {
+      const item = document.createElement('div');
+      item.className = `tardis-rag-msg ${role}`;
+      item.textContent = text;
+      chat.appendChild(item);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function ask(question) {
+      const trimmed = (question || '').trim();
+      if (!trimmed) return;
+      appendMessage('user', trimmed);
+      input.value = '';
+      submit.disabled = true;
+      submit.textContent = '处理中';
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify({ question: trimmed }),
+        });
+        const data = await response.json();
+        appendMessage('bot', data.answer || '当前无法回答这个问题，请换个问法。');
+      } catch (error) {
+        appendMessage('bot', '当前客服暂时不可用，请稍后再试。');
+      } finally {
+        submit.disabled = false;
+        submit.textContent = '发送';
+      }
+    }
+
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      ask(input.value);
+    });
+
+    quickButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        ask(button.getAttribute('data-question') || '');
+      });
+    });
+
+    if (adminLoginForm) {
+      adminLoginForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        adminLoginStatus.textContent = '登录中...';
+        const username = document.getElementById('tardis-admin-username').value.trim();
+        const password = document.getElementById('tardis-admin-password').value;
+        const body = new URLSearchParams({ username, password });
+        const response = await fetch(adminLoginEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body,
+        });
+        const data = await response.json();
+        if (response.ok && data.ok) {
+          window.location.reload();
+          return;
+        }
+        adminLoginStatus.textContent = data.message || '登录失败。';
+      });
+    }
+
+    if (adminLogoutButton) {
+      adminLogoutButton.addEventListener('click', async function () {
+        await fetch(adminLogoutEndpoint, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCsrfToken() },
+        });
+        window.location.reload();
+      });
+    }
+
+    function resetEntryForm() {
+      if (!entryForm) return;
+      sourceTextInput.value = '';
+      entryKeywordsInput.value = '';
+      entrySortOrderInput.value = '100';
+      saveStatus.textContent = '';
+    }
+
+    if (entryResetButton) {
+      entryResetButton.addEventListener('click', resetEntryForm);
+    }
+
+    if (entryList) {
+      entryList.addEventListener('click', async function (event) {
+        const deleteButton = event.target.closest('[data-entry-delete]');
+        if (deleteButton) {
+          const entryId = deleteButton.getAttribute('data-entry-delete');
+          if (!entryId || !window.confirm('确认删除这条语料？')) return;
+          const response = await fetch(`${adminDeletePathPrefix}${entryId}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() },
+          });
+          const data = await response.json();
+          if (response.ok && data.ok) {
+            window.location.reload();
+            return;
+          }
+          saveStatus.textContent = '删除失败。';
+        }
+      });
+    }
+
+    if (entryForm) {
+      entryForm.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        saveStatus.textContent = '保存中...';
+        const response = await fetch(adminSaveEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken(),
+          },
+          body: JSON.stringify({
+            source_text: sourceTextInput.value.trim(),
+            keywords: entryKeywordsInput.value.trim(),
+            sort_order: entrySortOrderInput.value.trim(),
+            is_active: true,
+          }),
+        });
+        const data = await response.json();
+        if (response.ok && data.ok) {
+          const count = data.created_count || 0;
+          saveStatus.textContent = `已智能提取并保存 ${count} 条语料，页面即将刷新。`;
+          window.location.reload();
+          return;
+        }
+        saveStatus.textContent = data.message || '保存失败。';
+      });
+    }
+  }());
+</script>
 {% endblock %}
 
 {% block page_tail_promo %}{% endblock %}

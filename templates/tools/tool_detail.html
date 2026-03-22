@@ -39,7 +39,58 @@
     .tool-detail-prose {
         color: #475569;
         line-height: 1.9;
-        white-space: pre-wrap;
+    }
+    .tool-detail-prose h1,
+    .tool-detail-prose h2,
+    .tool-detail-prose h3,
+    .tool-detail-prose h4 {
+        color: #0f172a;
+        line-height: 1.35;
+        margin: 1.4rem 0 0.8rem;
+    }
+    .tool-detail-prose p,
+    .tool-detail-prose ul,
+    .tool-detail-prose ol,
+    .tool-detail-prose blockquote {
+        margin: 0 0 1rem;
+    }
+    .tool-detail-prose ul,
+    .tool-detail-prose ol {
+        padding-left: 1.4rem;
+    }
+    .tool-detail-prose li {
+        margin-bottom: 0.45rem;
+    }
+    .tool-detail-prose strong {
+        color: #0f172a;
+    }
+    .tool-detail-prose code {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.12rem 0.4rem;
+        font-size: 0.92em;
+        color: #1e293b;
+    }
+    .tool-detail-prose pre {
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 16px;
+        border-radius: 16px;
+        overflow-x: auto;
+        margin: 0 0 1rem;
+    }
+    .tool-detail-prose pre code {
+        background: transparent;
+        border: 0;
+        color: inherit;
+        padding: 0;
+    }
+    .tool-detail-prose blockquote {
+        border-left: 4px solid #93c5fd;
+        background: #eff6ff;
+        padding: 12px 16px;
+        border-radius: 0 12px 12px 0;
     }
     .tool-detail-quicklinks {
         display: flex;
@@ -206,7 +257,7 @@
 
         <div class="tool-detail-card">
             <h2 style="color: #0f172a; margin-bottom: 1rem; font-size: 1.45rem;">详细介绍</h2>
-            <div class="tool-detail-prose">{{ tool.full_description|safe }}</div>
+            <div class="tool-detail-prose">{{ tool_full_description_html|safe }}</div>
         </div>
 
         <div class="tool-detail-card">

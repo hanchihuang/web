@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 
-from .models import TTSOrder, TTSCreditRechargeOrder
+from .models import TTSOrder, TTSCreditRechargeOrder, EdgeInferenceRequest
 from .tts import DEFAULT_RECHARGE_PACKS, VOICE_PRESET_CONFIG
 
 
@@ -127,3 +127,39 @@ class TTSCreditRechargeProofForm(forms.ModelForm):
         widgets = {
             'payment_proof': forms.ClearableFileInput(attrs={'accept': 'image/*'}),
         }
+
+
+class EdgeInferenceRequestForm(forms.ModelForm):
+    class Meta:
+        model = EdgeInferenceRequest
+        fields = [
+            'contact_name',
+            'email',
+            'wechat',
+            'requested_model',
+            'use_case',
+            'expected_concurrency',
+            'expected_hours',
+            'budget',
+        ]
+        widgets = {
+            'contact_name': forms.TextInput(attrs={'placeholder': '怎么称呼你'}),
+            'email': forms.EmailInput(attrs={'placeholder': '用于接收开通信息'}),
+            'wechat': forms.TextInput(attrs={'placeholder': '微信 / Telegram / WhatsApp'}),
+            'requested_model': forms.TextInput(attrs={'placeholder': '例如：Qwen3-32B / vLLM / SGLang / 自定义镜像'}),
+            'use_case': forms.Textarea(attrs={'rows': 6, 'placeholder': '说明你的用途：推理模型、目标吞吐、是否要 API、是否要公网入口等'}),
+        }
+
+    def clean_expected_concurrency(self):
+        value = int(self.cleaned_data.get('expected_concurrency') or 1)
+        return max(1, value)
+
+    def clean_expected_hours(self):
+        value = int(self.cleaned_data.get('expected_hours') or 1)
+        return max(1, value)
+
+    def clean_use_case(self):
+        text = (self.cleaned_data.get('use_case') or '').strip()
+        if len(text) < 10:
+            raise forms.ValidationError('用途说明太短，至少写 10 个字。')
+        return text

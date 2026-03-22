@@ -110,6 +110,12 @@
                         <span id="tts-cancel-message" style="margin-left: 12px; color: #991b1b;"></span>
                     </div>
                     {% endif %}
+                    {% if can_regenerate %}
+                    <div style="margin-top: 14px;">
+                        <button id="tts-regenerate-btn" type="button" class="nav-cta" style="border: none; cursor: pointer; background: #1d4ed8;">重新生成</button>
+                        <span id="tts-regenerate-message" style="margin-left: 12px; color: #1e3a8a;"></span>
+                    </div>
+                    {% endif %}
                     <div id="tts-processing-log" style="margin-top: 10px; color: #475569;">{{ order.processing_log }}</div>
                 </div>
                 <div><strong>应付金额：</strong> {{ order.payable_amount }} 元</div>
@@ -124,7 +130,7 @@
                     {% if order.is_output_expired %}
                 <div><strong>交付文件：</strong> <span style="color: #b91c1c;">已过期并清理</span></div>
                     {% else %}
-                <div><strong>交付文件：</strong> <a href="{{ order.output_file.url }}" target="_blank">下载音频</a></div>
+                <div><strong>交付文件：</strong> <a href="{% url 'tts_download_order_output' order.order_no %}?email={{ order.email|urlencode }}" target="_blank">下载音频</a></div>
                 <div><strong>下载提醒：</strong> 请在 {{ order.output_expires_at|date:"Y-m-d H:i" }} 前下载，文件将在 3 小时后自动清除。</div>
                     {% endif %}
                 {% endif %}
@@ -171,6 +177,9 @@
         const cancelButton = document.getElementById('tts-cancel-btn');
         const cancelMessage = document.getElementById('tts-cancel-message');
         const cancelUrl = "{% url 'tts_cancel_order' order.order_no %}";
+        const regenerateButton = document.getElementById('tts-regenerate-btn');
+        const regenerateMessage = document.getElementById('tts-regenerate-message');
+        const regenerateUrl = "{% url 'tts_regenerate_order' order.order_no %}";
 
         function applyStatus(data) {
             if (!data.ok) return;
@@ -222,6 +231,29 @@
                     cancelButton.disabled = false;
                 }
                 poll();
+            });
+        }
+
+        if (regenerateButton) {
+            regenerateButton.addEventListener('click', async function () {
+                regenerateButton.disabled = true;
+                regenerateMessage.textContent = '正在创建重新生成订单...';
+                const response = await fetch(regenerateUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    },
+                    body: 'email={{ order.email|urlencode }}'
+                });
+                const data = await response.json();
+                regenerateMessage.textContent = data.message || '重新生成失败';
+                if (data.ok && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                    return;
+                }
+                regenerateButton.disabled = false;
             });
         }
     }());

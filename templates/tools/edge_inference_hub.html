@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}边缘推理服务 | AI tools{% endblock %}
+{% block meta_description %}类似早期 vast.ai 的边缘推理服务入口。展示 GPU 节点供给、价格、配置，并支持提交模型部署与推理租用请求。{% endblock %}
+
+{% block hero %}
+<section class="hero" style="background: linear-gradient(135deg, #111827 0%, #0f766e 46%, #16a34a 100%);">
+    <div class="container">
+        <div class="hero-content" style="text-align:left; max-width:1100px; margin:0 auto;">
+            <div style="display:grid; gap:26px; grid-template-columns:1.1fr 0.9fr; align-items:center;">
+                <div>
+                    <div style="display:inline-flex; gap:10px; align-items:center; background:rgba(255,255,255,.12); color:#fff; border-radius:999px; padding:8px 14px; margin-bottom:18px; font-weight:700;">
+                        <span>Edge Inference</span>
+                        <span style="opacity:.75;">类似早期 vast.ai</span>
+                    </div>
+                    <h1 style="font-size:3rem; line-height:1.06; margin:0 0 16px;">把 GPU 节点、模型部署和推理开通做成一个边缘市场</h1>
+                    <p style="font-size:1.08rem; max-width:700px; margin:0; color:#e5eef8;">
+                        第一版先做成可运营的供给市场。你可以展示不同 GPU 供给、计费方式和支持模型，用户直接在站内提交租用/开通请求，后台统一处理。
+                    </p>
+                </div>
+                <div style="background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:20px; padding:22px;">
+                    <div style="display:grid; gap:12px;">
+                        <div style="padding:14px; border-radius:14px; background:rgba(255,255,255,.08); color:#f8fafc;">1. 展示 GPU / 显存 / 价格</div>
+                        <div style="padding:14px; border-radius:14px; background:rgba(255,255,255,.08); color:#f8fafc;">2. 用户提交模型与用途</div>
+                        <div style="padding:14px; border-radius:14px; background:rgba(255,255,255,.08); color:#f8fafc;">3. 后台审核并开通实例/API</div>
+                        <div style="padding:14px; border-radius:14px; background:rgba(255,255,255,.08); color:#f8fafc;">4. 后续再接自动调度和计费</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section style="margin-bottom: 44px;">
+    <div class="section-header">
+        <h2 class="section-title"><span class="icon">🧠</span> 可用供给</h2>
+    </div>
+    <div style="display:grid; gap:18px; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));">
+        {% for offer in offers %}
+        <div class="tool-card">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                    <h3 style="margin:0 0 6px;">{{ offer.name }}</h3>
+                    <div style="color:#64748b;">{{ offer.provider|default:"自营/合作节点" }} · {{ offer.region|default:"区域待定" }}</div>
+                </div>
+                <div style="padding:8px 12px; border-radius:12px; background:#eff6ff; color:#1d4ed8; font-weight:800;">{{ offer.price }} / {{ offer.get_billing_unit_display }}</div>
+            </div>
+            <div style="display:grid; gap:8px; color:#334155;">
+                <div><strong>GPU：</strong>{{ offer.gpu_name }} × {{ offer.gpu_count }}</div>
+                <div><strong>显存：</strong>{{ offer.vram_gb }} GB</div>
+                <div><strong>CPU / 内存：</strong>{{ offer.cpu_cores }} 核 / {{ offer.ram_gb }} GB</div>
+                <div><strong>磁盘：</strong>{{ offer.disk_gb }} GB</div>
+                <div><strong>网络：</strong>↑ {{ offer.network_up_mbps }} / ↓ {{ offer.network_down_mbps }} Mbps</div>
+                <div><strong>支持模型：</strong>{{ offer.supported_models|default:"自定义镜像 / vLLM / SGLang / Ollama" }}</div>
+                <div><strong>协议：</strong>{{ offer.endpoint_protocols|default:"OpenAI Compatible / HTTP / SSH" }}</div>
+                <div><strong>最短时长：</strong>{{ offer.min_rental_hours }} 小时</div>
+                <div><strong>库存：</strong>{{ offer.stock }}</div>
+            </div>
+            {% if offer.description %}
+            <div style="margin-top:12px; padding:12px; border-radius:12px; background:#f8fafc; color:#475569; line-height:1.8;">{{ offer.description }}</div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="tool-card">
+            <div style="color:#64748b;">当前还没有上架中的边缘推理供给。你可以先到后台添加实例配置。</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section style="margin-bottom: 48px;">
+    <div style="display:grid; gap:22px; grid-template-columns:1.05fr 0.95fr;">
+        <div class="tool-card">
+            <div class="section-header" style="margin-bottom:16px;">
+                <h2 class="section-title"><span class="icon">📮</span> 提交开通请求</h2>
+            </div>
+            {% if submitted_request %}
+            <div style="padding:14px 16px; border-radius:14px; background:#ecfdf5; color:#166534; margin-bottom:16px;">
+                已提交请求 `#{{ submitted_request.id }}`。后台可以直接在管理页处理。
+            </div>
+            {% endif %}
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div style="display:grid; gap:14px;">
+                    <div>
+                        <label style="font-weight:700; display:block; margin-bottom:6px;">选择供给</label>
+                        <select name="offer_id" style="width:100%; border:1px solid #cbd5e1; border-radius:12px; padding:12px 14px; font:inherit;">
+                            <option value="">先不指定，我只描述需求</option>
+                            {% for offer in offers %}
+                            <option value="{{ offer.id }}">{{ offer.name }} / {{ offer.gpu_name }} / {{ offer.price }} / {{ offer.get_billing_unit_display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; display:block; margin-bottom:6px;">联系人</label>
+                        {{ request_form.contact_name }}
+                        {{ request_form.contact_name.errors }}
+                    </div>
+                    <div>
+                        <label style="font-weight:700; display:block; margin-bottom:6px;">邮箱</label>
+                        {{ request_form.email }}
+                        {{ request_form.email.errors }}
+                    </div>
+                    <div>
+                        <label style="font-weight:700; display:block; margin-bottom:6px;">微信/Telegram</label>
+                        {{ request_form.wechat }}
+                    </div>
+                    <div>
+                        <label style="font-weight:700; display:block; margin-bottom:6px;">目标模型/镜像</label>
+                        {{ request_form.requested_model }}
+                    </div>
+                    <div style="display:grid; gap:14px; grid-template-columns:repeat(3, minmax(0, 1fr));">
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:6px;">预期并发</label>
+                            {{ request_form.expected_concurrency }}
+                        </div>
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:6px;">预期时长(小时)</label>
+                            {{ request_form.expected_hours }}
+                        </div>
+                        <div>
+                            <label style="font-weight:700; display:block; margin-bottom:6px;">预算</label>
+                            {{ request_form.budget }}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight:700; display:block; margin-bottom:6px;">用途说明</label>
+                        {{ request_form.use_case }}
+                        {{ request_form.use_case.errors }}
+                    </div>
+                </div>
+                <button type="submit" class="nav-cta" style="border:none; cursor:pointer; margin-top:16px;">提交边缘推理请求</button>
+            </form>
+        </div>
+        <div class="tool-card">
+            <h2 style="margin-bottom:14px;">这版已经能做什么</h2>
+            <div style="display:grid; gap:12px;">
+                <div style="padding:14px; border-radius:12px; background:#eff6ff;">后台上架不同 GPU 供给与价格</div>
+                <div style="padding:14px; border-radius:12px; background:#f8fafc;">用户站内提交模型部署和租用请求</div>
+                <div style="padding:14px; border-radius:12px; background:#fff7ed;">后台审核后可直接发入口、API Key、SSH 信息</div>
+                <div style="padding:14px; border-radius:12px; background:#ecfeff;">后续再接真实节点自动调度和自动计费</div>
+            </div>
+            {% if my_requests %}
+            <h3 style="margin:18px 0 10px;">我的请求与开通信息</h3>
+            <div style="display:grid; gap:10px; margin-bottom:18px;">
+                {% for item in my_requests %}
+                <div style="padding:12px; border-radius:12px; background:#f8fafc;">
+                    <div><strong>#{{ item.id }}</strong> · {{ item.get_status_display }} · {{ item.requested_model|default:"未指定模型" }}</div>
+                    <div style="color:#64748b;">{{ item.offer.name|default:"未指定供给" }}</div>
+                    {% if item.public_endpoint %}<div style="margin-top:6px; color:#0f172a;"><strong>Endpoint：</strong><code>{{ item.public_endpoint }}</code></div>{% endif %}
+                    {% if item.api_key_prefix %}<div style="margin-top:6px; color:#0f172a;"><strong>API Key 前缀：</strong><code>{{ item.api_key_prefix }}</code> · 后四位 {{ item.api_key_last4 }}</div>{% endif %}
+                    {% if item.ssh_host %}<div style="margin-top:6px; color:#0f172a;"><strong>SSH：</strong><code>ssh {{ item.ssh_username|default:"user" }}@{{ item.ssh_host }} -p {{ item.ssh_port }}</code></div>{% endif %}
+                    {% if item.access_note %}<div style="margin-top:6px; color:#475569;">{{ item.access_note }}</div>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <h3 style="margin:18px 0 10px;">最近请求</h3>
+            <div style="display:grid; gap:10px;">
+                {% for item in recent_requests %}
+                <div style="padding:12px; border-radius:12px; background:#f8fafc;">
+                    <div><strong>{{ item.contact_name }}</strong> · {{ item.get_status_display }}</div>
+                    <div style="color:#64748b;">{{ item.requested_model|default:"未指定模型" }} / {{ item.offer.name|default:"未指定供给" }}</div>
+                </div>
+                {% empty %}
+                <div style="color:#64748b;">还没有边缘推理请求。</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

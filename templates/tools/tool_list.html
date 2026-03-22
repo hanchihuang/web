@@ -33,6 +33,10 @@
         border-radius: 20px;
         padding: 20px;
         box-shadow: var(--shadow-lg);
+        max-height: calc(100vh - 104px);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
     .tool-list-sidebar h2 {
         color: var(--gray-900);
@@ -44,6 +48,21 @@
         font-size: 0.94rem;
         line-height: 1.8;
         margin-bottom: 16px;
+    }
+    .tool-list-sidebar .category-filter {
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
+        margin-bottom: 0;
+        overflow-y: auto;
+        min-height: 0;
+    }
+    .tool-list-sidebar .category-filter::-webkit-scrollbar {
+        width: 8px;
+    }
+    .tool-list-sidebar .category-filter::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
     }
     .tool-list-main {
         display: grid;
@@ -105,7 +124,7 @@
         <h2>怎么用这个页</h2>
         <p>如果你还不确定方向，建议先从首页精选或专题页开始；如果你已经知道自己要找写作、编程、设计、搜索或自动化工具，这页就是最高效的入口。</p>
         {% if categories %}
-        <div class="category-filter" style="padding:0; background:transparent; box-shadow:none; margin-bottom:0;">
+        <div class="category-filter">
             <a href="{% url 'tool_list' %}" class="filter-btn {% if not selected_category %}active{% endif %}">
                 全部
                 <span class="filter-count">{{ tools.count }}</span>

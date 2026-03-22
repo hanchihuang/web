@@ -7,6 +7,8 @@ from datetime import timedelta
 import time
 import traceback
 
+import numpy as np
+import torch
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.core.mail import send_mail
@@ -17,6 +19,8 @@ from tools.models import TTSOrder, TTSCreditAccount, TTSCreditLedger
 from tools.tts_config import get_tts_runtime_rules
 from tools.qwen_runtime import DEFAULT_MAX_NEW_TOKENS
 from tools.qwen_runtime import CancelRequestedError, QwenTTSRuntime
+from tools.qwen_runtime import StreamingAudioWriter, estimate_max_new_tokens, plan_batches
+from tools.tts_retention import archive_tts_file
 from tools.tts import get_voice_preset_config
 
 
@@ -187,6 +191,266 @@ class Command(BaseCommand):
         )
         return runtime, ffmpeg_bin, ffprobe_bin
 
+    def _read_positive_int_env(self, name, default):
+        raw = os.getenv(name, '').strip()
+        if not raw:
+            return default
+        try:
+            value = int(raw)
+        except ValueError:
+            return default
+        return max(1, value)
+
+    def _finalize_delivered_order(self, order, temp_output_path, output_path, ffprobe_bin):
+        temp_output_path.replace(output_path)
+        self._set_progress(order, 99, '正在整理交付文件')
+        duration_result = subprocess.run(
+            [
+                ffprobe_bin, '-v', 'error', '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1', str(output_path)
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        duration_seconds = int(float(duration_result.stdout.strip() or '0'))
+
+        relative_path = output_path.relative_to(settings.MEDIA_ROOT)
+        order.output_file.name = str(relative_path)
+        order.output_duration_seconds = duration_seconds
+        order.status = TTSOrder.Status.DELIVERED
+        order.delivered_at = timezone.now()
+        order.output_expires_at = timezone.now() + timedelta(hours=3)
+        order.processing_log = f'{timezone.now():%F %T} [进度 100%] 生成完成，文件将于 {timezone.localtime(order.output_expires_at):%F %T} 过期清理'
+        order.save()
+        archive_path = archive_tts_file(order, output_path)
+        if archive_path:
+            order.processing_log = f'{order.processing_log}\n{timezone.now():%F %T} 已按特殊保留规则备份到 {archive_path}'
+            order.save(update_fields=['processing_log', 'updated_at'])
+        try:
+            self._send_delivery_email(order)
+        except Exception as exc:
+            order.processing_log = f'{timezone.now():%F %T} 生成完成，但邮件发送失败: {exc}'
+            order.save(update_fields=['processing_log', 'updated_at'])
+            self.stdout.write(self.style.WARNING(f'订单 {order.order_no} 音频已生成，但邮件发送失败: {exc}'))
+        self.stdout.write(self.style.SUCCESS(f'已交付 {order.order_no}: {relative_path}'))
+
+    def _mark_order_failed(self, order, exc):
+        order.status = TTSOrder.Status.QUEUED
+        order.processing_log = f'{timezone.now():%F %T} 生成失败: {exc}'
+        order.save(update_fields=['status', 'processing_log', 'updated_at'])
+
+    def _claim_orders(self, *, limit, order_no=''):
+        with transaction.atomic():
+            queryset = TTSOrder.objects.select_for_update(skip_locked=True).filter(
+                payment_status=TTSOrder.PaymentStatus.PAID,
+                status=TTSOrder.Status.QUEUED,
+            ).order_by('created_at')
+            if order_no:
+                queryset = queryset.filter(order_no=order_no)
+            orders = list(queryset[:limit])
+            for order in orders:
+                order.status = TTSOrder.Status.GENERATING
+                order.processing_log = f'{timezone.now():%F %T} [进度 10%] 常驻模型 worker 已接单，准备生成'
+                order.save(update_fields=['status', 'processing_log', 'updated_at'])
+            return orders
+
+    def _build_group_job(self, order, runtime, media_dir):
+        order.refresh_from_db(fields=['status', 'cancel_requested'])
+        if order.status == TTSOrder.Status.CANCELLED or order.cancel_requested:
+            self._mark_order_cancelled(order, '用户已取消任务，额度已退回')
+            return None
+
+        preset = get_voice_preset_config(order.voice_preset, order.style_notes)
+        normalized_text, chunks, direct_max_chars = runtime.prepare_text(order.source_text)
+        if not chunks:
+            self._mark_order_failed(order, ValueError('待转文本为空'))
+            return None
+        planned_batches = plan_batches(chunks, runtime.batch_size, runtime.max_batch_chars)
+        self._update_phase_progress(
+            order,
+            'text_ready',
+            chars=len(normalized_text),
+            chunks=len(chunks),
+            batches=max(1, len(planned_batches)),
+            direct_max_chars=direct_max_chars,
+            chunk_size=runtime.max_chars,
+            batch_chars=runtime.max_batch_chars,
+        )
+
+        temp_dir = tempfile.TemporaryDirectory()
+        temp_dir_path = Path(temp_dir.name)
+        output_path = media_dir / f'{order.order_no}.{order.delivery_format}'
+        temp_output_path = temp_dir_path / output_path.name
+        return {
+            'order': order,
+            'preset': preset,
+            'chunks': chunks,
+            'next_chunk_index': 0,
+            'total_chunks': len(chunks),
+            'total_audio_samples': 0,
+            'writer': None,
+            'sr': 0,
+            'pause': None,
+            'temp_dir': temp_dir,
+            'temp_output_path': temp_output_path,
+            'output_path': output_path,
+            'started_at': time.perf_counter(),
+        }
+
+    def _process_order_group(self, orders, runtime, ffmpeg_bin, ffprobe_bin, *, group_limit, order_no=''):
+        if not orders:
+            return
+
+        media_dir = Path(settings.MEDIA_ROOT) / 'tts_orders'
+        media_dir.mkdir(parents=True, exist_ok=True)
+        jobs = []
+
+        for order in orders:
+            job = self._build_group_job(order, runtime, media_dir)
+            if job is not None:
+                jobs.append(job)
+
+        if not jobs:
+            return
+
+        progress_callback = lambda phase, **payload: [self._update_phase_progress(job['order'], phase, **payload) for job in jobs]
+        runtime.load(progress_callback=progress_callback)
+        runtime._maybe_warmup(
+            tts=runtime.tts,
+            chunks=[job['chunks'][0] for job in jobs if job['chunks']],
+            language='Chinese',
+            speaker=jobs[0]['preset']['speaker'],
+            instruct=jobs[0]['preset']['instruction'],
+            progress_callback=progress_callback,
+        )
+
+        while jobs:
+            if not order_no and len(jobs) < group_limit:
+                refill_orders = self._claim_orders(limit=group_limit - len(jobs))
+                for refill_order in refill_orders:
+                    refill_job = self._build_group_job(refill_order, runtime, media_dir)
+                    if refill_job is not None:
+                        jobs.append(refill_job)
+
+            remaining_jobs = []
+            batch_items = []
+            batch_jobs = []
+            batch_chars = 0
+
+            for job in jobs:
+                order = job['order']
+                if self._should_cancel(order):
+                    if job['writer'] is not None:
+                        job['writer'].close()
+                    job['temp_dir'].cleanup()
+                    self._mark_order_cancelled(order, '用户已取消任务，额度已退回')
+                    continue
+                if job['next_chunk_index'] >= job['total_chunks']:
+                    remaining_jobs.append(job)
+                    continue
+
+                chunk = job['chunks'][job['next_chunk_index']]
+                if batch_items and (len(batch_items) >= runtime.batch_size or batch_chars + len(chunk) > runtime.max_batch_chars):
+                    remaining_jobs.append(job)
+                    continue
+
+                batch_items.append({
+                    'text': chunk,
+                    'language': 'Chinese',
+                    'speaker': job['preset']['speaker'],
+                    'instruct': job['preset']['instruction'],
+                    'max_new_tokens': estimate_max_new_tokens(chunk, runtime.max_new_tokens),
+                })
+                batch_jobs.append(job)
+                batch_chars += len(chunk)
+                remaining_jobs.append(job)
+
+            if not batch_items:
+                break
+
+            for job in batch_jobs:
+                order = job['order']
+                self._set_progress(
+                    order,
+                    34,
+                    f'正在并行生成第 {job["next_chunk_index"] + 1}/{max(job["total_chunks"], 1)} 段，本段 {len(job["chunks"][job["next_chunk_index"]])} 字',
+                )
+
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            batch_started = time.perf_counter()
+            with torch.inference_mode():
+                results, current_sr = runtime.generate_batch_items(
+                    items=batch_items,
+                    progress_callback=lambda phase, **payload: [self._update_phase_progress(job['order'], phase, **payload) for job in batch_jobs],
+                )
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            batch_elapsed = time.perf_counter() - batch_started
+
+            survivors = []
+            for job, result in zip(batch_jobs, results):
+                order = job['order']
+                if isinstance(result, Exception):
+                    if job['writer'] is not None:
+                        job['writer'].close()
+                    job['temp_dir'].cleanup()
+                    self._mark_order_failed(order, result)
+                    self.stderr.write(f'{order.order_no} grouped batch item failed: {result}')
+                    continue
+
+                try:
+                    if job['writer'] is None:
+                        job['sr'] = current_sr
+                        job['writer'] = StreamingAudioWriter(
+                            job['temp_output_path'],
+                            audio_format=order.delivery_format,
+                            sr=current_sr,
+                            mp3_bitrate=runtime.mp3_bitrate,
+                            ffmpeg_bin=runtime.ffmpeg_bin,
+                        )
+                        if runtime.pause_ms:
+                            job['pause'] = np.zeros(int(current_sr * runtime.pause_ms / 1000), dtype=np.float32)
+                        else:
+                            job['pause'] = None
+
+                    wav = np.asarray(result, dtype=np.float32)
+                    job['writer'].write(wav)
+                    job['total_audio_samples'] += len(wav)
+                    job['next_chunk_index'] += 1
+
+                    if job['pause'] is not None and job['next_chunk_index'] < job['total_chunks']:
+                        job['writer'].write(job['pause'])
+                        job['total_audio_samples'] += len(job['pause'])
+
+                    audio_sec = (len(wav) / job['sr']) if job['sr'] else 0
+                    percent = 34 + int(job['next_chunk_index'] / max(job['total_chunks'], 1) * 56)
+                    self._set_progress(
+                        order,
+                        percent,
+                        f'第 {job["next_chunk_index"]}/{max(job["total_chunks"], 1)} 段完成，最近一段耗时 {batch_elapsed:.2f}s，音频时长 {audio_sec:.2f}s',
+                    )
+
+                    if job['next_chunk_index'] >= job['total_chunks']:
+                        self._set_progress(order, 94, f'所有片段已完成，正在封装最终 {order.delivery_format.upper()} 文件')
+                        job['writer'].close()
+                        self._finalize_delivered_order(order, job['temp_output_path'], job['output_path'], ffprobe_bin)
+                        job['temp_dir'].cleanup()
+                    else:
+                        survivors.append(job)
+                except Exception as exc:
+                    if job['writer'] is not None:
+                        try:
+                            job['writer'].close()
+                        except Exception:
+                            pass
+                    job['temp_dir'].cleanup()
+                    self._mark_order_failed(order, exc)
+                    self.stderr.write(traceback.format_exc())
+
+            jobs = [job for job in remaining_jobs if job not in batch_jobs] + survivors
+
     def _process_order(self, order, runtime, ffmpeg_bin, ffprobe_bin):
         order.refresh_from_db(fields=['status', 'cancel_requested'])
         if order.status == TTSOrder.Status.CANCELLED or order.cancel_requested:
@@ -248,6 +512,10 @@ class Command(BaseCommand):
             order.output_expires_at = timezone.now() + timedelta(hours=3)
             order.processing_log = f'{timezone.now():%F %T} [进度 100%] 生成完成，文件将于 {timezone.localtime(order.output_expires_at):%F %T} 过期清理'
             order.save()
+            archive_path = archive_tts_file(order, output_path)
+            if archive_path:
+                order.processing_log = f'{order.processing_log}\n{timezone.now():%F %T} 已按特殊保留规则备份到 {archive_path}'
+                order.save(update_fields=['processing_log', 'updated_at'])
             try:
                 self._send_delivery_email(order)
             except Exception as exc:
@@ -265,17 +533,12 @@ class Command(BaseCommand):
         runtime, ffmpeg_bin, ffprobe_bin = self._build_runtime()
         watch = options['watch']
         idle_rounds = 0
+        group_limit = self._read_positive_int_env('QWEN_TTS_MAX_CONCURRENT_ORDERS', max(1, runtime.batch_size))
 
         while True:
-            queryset = TTSOrder.objects.filter(
-                payment_status=TTSOrder.PaymentStatus.PAID,
-                status=TTSOrder.Status.QUEUED,
-            ).order_by('created_at')
+            orders = self._claim_orders(limit=group_limit, order_no=options['order_no'] or '')
 
-            if options['order_no']:
-                queryset = queryset.filter(order_no=options['order_no'])
-
-            if not queryset.exists():
+            if not orders:
                 if not watch:
                     self.stdout.write(self.style.WARNING('没有待处理的已付款 TTS 订单。'))
                     return
@@ -286,8 +549,14 @@ class Command(BaseCommand):
                 continue
 
             idle_rounds = 0
-            for order in queryset:
-                self._process_order(order, runtime, ffmpeg_bin, ffprobe_bin)
+            self._process_order_group(
+                orders,
+                runtime,
+                ffmpeg_bin,
+                ffprobe_bin,
+                group_limit=group_limit,
+                order_no=options['order_no'] or '',
+            )
 
             if not watch and options['order_no']:
                 return

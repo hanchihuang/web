@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Tushare Pro Replay 目录 | 可搜索前端目录页{% endblock %}
+{% block meta_description %}Tushare Pro Replay 目录页：浏览互动易、筹码分布、股票、融资融券、新闻、期货、期权、港股、美股、外汇、全球指数、主连、指数、ETF 与其他类型数据的可用 API、示例参数、保留周期和示例 URL。{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+  <a href="{% url 'quant_article_tushare' %}" style="color:#2563eb;text-decoration:none;">← 返回 Tushare 指南</a>
+</div>
+
+<style>
+  .tscat-shell { background:#fff; border:1px solid #e5e7eb; border-radius:24px; padding:28px; box-shadow:0 24px 48px -32px rgba(15,23,42,.18); }
+  .tscat-hero { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(280px,.9fr); gap:18px; align-items:stretch; margin-bottom:24px; }
+  .tscat-panel { border-radius:20px; padding:22px; }
+  .tscat-panel.primary { background:linear-gradient(135deg,#eff6ff 0%,#f8fafc 100%); border:1px solid #bfdbfe; }
+  .tscat-panel.secondary { background:linear-gradient(135deg,#fff7ed 0%,#ffffff 100%); border:1px solid #fed7aa; }
+  .tscat-badge { display:inline-flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px; background:#0f172a; color:#fff; font-size:.8rem; font-weight:700; }
+  .tscat-search { display:grid; gap:12px; margin:18px 0 0; }
+  .tscat-input { width:100%; border:1px solid #cbd5e1; border-radius:16px; padding:14px 16px; font:inherit; background:#fff; }
+  .tscat-filters { display:flex; flex-wrap:wrap; gap:10px; }
+  .tscat-chip { border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:999px; padding:8px 12px; font:inherit; cursor:pointer; }
+  .tscat-chip.active { background:#0f172a; color:#fff; border-color:#0f172a; }
+  .tscat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  .tscat-card { border:1px solid #e2e8f0; border-radius:20px; background:#fff; overflow:hidden; box-shadow:0 18px 36px -30px rgba(15,23,42,.2); }
+  .tscat-card-head { padding:18px 18px 12px; border-bottom:1px solid #e2e8f0; background:linear-gradient(180deg,#f8fafc 0%,#fff 100%); }
+  .tscat-card-body { padding:16px 18px 18px; display:grid; gap:12px; }
+  .tscat-item { border:1px solid #e2e8f0; border-radius:16px; padding:12px 13px; background:#f8fafc; }
+  .tscat-label { font-size:.8rem; color:#64748b; margin-bottom:4px; }
+  .tscat-code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:#0f172a; word-break:break-word; }
+  .tscat-url { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:#1d4ed8; word-break:break-word; }
+  .tscat-pre { margin-top:8px; padding:12px 13px; border-radius:14px; background:#0f172a; color:#e2e8f0; overflow:auto; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.86rem; line-height:1.7; white-space:pre-wrap; word-break:break-word; }
+  .tscat-copy { margin-top:8px; border:none; border-radius:10px; background:#0f172a; color:#fff; padding:8px 10px; font:inherit; font-size:.9rem; cursor:pointer; }
+  .tscat-copy.secondary { background:#e2e8f0; color:#0f172a; }
+  .tscat-meta { display:grid; gap:8px; color:#475569; line-height:1.8; }
+  .tscat-testbar { margin-top:14px; display:grid; gap:10px; }
+  .tscat-status { font-size:.92rem; color:#475569; min-height:22px; }
+  .tscat-empty { display:none; margin-top:18px; padding:18px; border:1px dashed #cbd5e1; border-radius:18px; color:#64748b; text-align:center; }
+  @media (max-width: 860px) {
+    .tscat-hero { grid-template-columns:1fr; }
+  }
+</style>
+
+<article class="tscat-shell">
+  <section class="tscat-hero">
+    <div class="tscat-panel primary">
+      <div class="tscat-badge">Tushare Replay Catalog</div>
+      <h1 style="margin:14px 0 8px; font-size:2rem; line-height:1.28; color:#0f172a;">/tushare/pro/catalog 可搜索前端目录页</h1>
+      <p style="margin:0; color:#475569; line-height:1.85;">这个页面直接把站内可 replay 的非分钟 Tushare Pro 数据目录、示例参数、示例 URL、推荐访问节奏和保留周期放到一个浏览器友好的前端页里。搜索关键词、类别名、API 名，都可以快速筛到你要的接口。</p>
+      <div class="tscat-search">
+        <input id="tscat-search" class="tscat-input" type="text" placeholder="搜索类别、API 名、参数名，例如：互动易、margin、港股、index_weight">
+        <div id="tscat-filters" class="tscat-filters">
+          <button class="tscat-chip active" type="button" data-category="all">全部类别</button>
+          {% for category, items in tushare_catalog.examples.items %}
+            <button class="tscat-chip" type="button" data-category="{{ category }}">{{ category }}</button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="tscat-panel secondary">
+      <h2 style="margin:0 0 10px; font-size:1.2rem; color:#9a3412;">使用规则</h2>
+      <div class="tscat-meta">
+        <div>只开放非分钟数据。分钟类 API 仍不在本次 relay 范围内。</div>
+        <div>API 客户端请求 JSON 目录时，继续访问 <code>/tushare/pro/catalog</code> 并携带 <code>X-API-Key</code>。</div>
+        <div>浏览器直接打开 <code>/tushare/pro/catalog</code> 时，会优先看到这个前端目录页。</div>
+        {% if tushare_catalog.cache_policy %}
+        <div>保存策略：新闻约 15 分钟，日频类通常到北京时间当日 24:00，历史日期查询通常 3 到 7 天，基础资料和 mapping 通常 7 天。</div>
+        {% endif %}
+      </div>
+      <div class="tscat-testbar">
+        <input id="tscat-api-key" class="tscat-input" type="password" placeholder="输入你自己的 API key，用于页面内点击测试">
+        <div id="tscat-status" class="tscat-status">页面不会展示可用 key。你输入的 key 只保存在当前浏览器本地。</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+        <a href="/tushare/pro/catalog" class="tscat-copy secondary" style="text-decoration:none; display:inline-flex; align-items:center;">当前路径</a>
+        <a href="{% url 'quant_article_tushare' %}" class="tscat-copy secondary" style="text-decoration:none; display:inline-flex; align-items:center;">返回说明页</a>
+      </div>
+    </div>
+  </section>
+
+  {% if tushare_catalog.examples %}
+    <section id="tscat-grid" class="tscat-grid">
+      {% for category, items in tushare_catalog.examples.items %}
+        <article class="tscat-card" data-category="{{ category }}" data-search="{{ category|lower }}">
+          <div class="tscat-card-head">
+            <h2 style="margin:0; color:#0f172a; font-size:1.2rem;">{{ category }}</h2>
+            <div style="margin-top:8px; color:#64748b; font-size:.92rem;">{{ items|length }} 个代表接口</div>
+          </div>
+          <div class="tscat-card-body">
+            {% for item in items %}
+              <div class="tscat-item" data-search="{{ category|lower }} {{ item.api_name|lower }} {{ item.params }}">
+                <div class="tscat-label">API 名</div>
+                <div class="tscat-code">{{ item.api_name }}</div>
+                <div class="tscat-label" style="margin-top:8px;">示例参数</div>
+                <div class="tscat-code">{{ item.params }}</div>
+                {% if item.fields %}
+                  <div class="tscat-label" style="margin-top:8px;">推荐 fields</div>
+                  <div class="tscat-code">{{ item.fields }}</div>
+                {% endif %}
+                {% if item.retention_policy %}
+                  <div class="tscat-label" style="margin-top:8px;">推荐保留周期</div>
+                  <div class="tscat-code">{{ item.retention_policy.label }}</div>
+                  <div class="tscat-label" style="margin-top:8px;">推荐访问节奏</div>
+                  <div class="tscat-code">{{ item.retention_policy.recommended_refresh }}</div>
+                  <div class="tscat-label" style="margin-top:8px;">策略依据</div>
+                  <div class="tscat-code">{{ item.retention_policy.reason }}</div>
+                {% endif %}
+                <div class="tscat-label" style="margin-top:8px;">示例 URL</div>
+                <div class="tscat-url">/tushare{{ item.example_url }}</div>
+                {% if item.python_example %}
+                  <div class="tscat-label" style="margin-top:8px;">Python 示例</div>
+                  <pre class="tscat-pre">{{ item.python_example }}</pre>
+                {% endif %}
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="tscat-copy" type="button" data-copy="/tushare{{ item.example_url }}">复制路径</button>
+                  <button class="tscat-copy secondary" type="button" data-copy="curl -G -H &quot;X-API-Key: &lt;your-api-key&gt;&quot; &quot;https://ai-tool.indevs.in/tushare{{ item.example_url }}&quot;">复制命令模板</button>
+                  <button class="tscat-copy secondary" type="button" data-copy="{{ item.fields }}">复制 fields</button>
+                  <button class="tscat-copy secondary" type="button" data-copy="{{ item.python_example }}">复制 Python 示例</button>
+                  <button class="tscat-copy" type="button" data-test-url="/tushare{{ item.example_url }}">点击测试</button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+    <div id="tscat-empty" class="tscat-empty">没有匹配项。换个关键词，或者切回“全部类别”。</div>
+  {% else %}
+    <div class="tscat-empty" style="display:block;">目录暂时不可用，请稍后刷新。</div>
+  {% endif %}
+</article>
+
+<script>
+  (function () {
+    const searchInput = document.getElementById('tscat-search');
+    const chips = Array.from(document.querySelectorAll('.tscat-chip'));
+    const cards = Array.from(document.querySelectorAll('.tscat-card'));
+    const empty = document.getElementById('tscat-empty');
+    const copyButtons = Array.from(document.querySelectorAll('[data-copy]'));
+    const testButtons = Array.from(document.querySelectorAll('[data-test-url]'));
+    const apiKeyInput = document.getElementById('tscat-api-key');
+    const statusNode = document.getElementById('tscat-status');
+    let activeCategory = 'all';
+
+    function normalize(text) {
+      return (text || '').toLowerCase().trim();
+    }
+
+    function render() {
+      const keyword = normalize(searchInput ? searchInput.value : '');
+      let visibleCount = 0;
+      cards.forEach((card) => {
+        const categoryMatch = activeCategory === 'all' || card.dataset.category === activeCategory;
+        const itemNodes = Array.from(card.querySelectorAll('.tscat-item'));
+        let matchedItems = 0;
+        itemNodes.forEach((item) => {
+          const haystack = normalize(item.dataset.search || item.textContent);
+          const matched = !keyword || haystack.includes(keyword);
+          item.style.display = matched ? '' : 'none';
+          if (matched) {
+            matchedItems += 1;
+          }
+        });
+        const showCard = categoryMatch && matchedItems > 0;
+        card.style.display = showCard ? '' : 'none';
+        if (showCard) {
+          visibleCount += 1;
+        }
+      });
+      if (empty) {
+        empty.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        activeCategory = chip.dataset.category || 'all';
+        chips.forEach((node) => node.classList.toggle('active', node === chip));
+        render();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', render);
+    }
+
+    copyButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const text = button.dataset.copy || '';
+        try {
+          await navigator.clipboard.writeText(text);
+          const original = button.textContent;
+          button.textContent = '已复制';
+          setTimeout(() => {
+            button.textContent = original;
+          }, 1200);
+        } catch (err) {
+          window.prompt('复制下面内容：', text);
+        }
+      });
+    });
+
+    if (apiKeyInput) {
+      apiKeyInput.value = window.localStorage.getItem('tushare_catalog_api_key') || '';
+      apiKeyInput.addEventListener('input', () => {
+        window.localStorage.setItem('tushare_catalog_api_key', apiKeyInput.value);
+      });
+    }
+
+    function setStatus(text, isError) {
+      if (!statusNode) return;
+      statusNode.textContent = text;
+      statusNode.style.color = isError ? '#b91c1c' : '#475569';
+    }
+
+    testButtons.forEach((button) => {
+      button.addEventListener('click', async () => {
+        const apiKey = (apiKeyInput ? apiKeyInput.value : '').trim();
+        if (!apiKey) {
+          setStatus('请先输入你自己的 API key，再点击测试。', true);
+          return;
+        }
+        const url = button.dataset.testUrl;
+        const original = button.textContent;
+        button.disabled = true;
+        button.textContent = '测试中...';
+        setStatus(`正在测试 ${url}`, false);
+        try {
+          const response = await fetch(url, {
+            headers: {
+              'X-API-Key': apiKey,
+              'Accept': 'application/json'
+            }
+          });
+          const text = await response.text();
+          let payload = null;
+          try {
+            payload = JSON.parse(text);
+          } catch (err) {
+            payload = null;
+          }
+          if (!response.ok) {
+            const message = payload && (payload.msg || payload.message || payload.error) ? (payload.msg || payload.message || payload.error) : `HTTP ${response.status}`;
+            setStatus(`测试失败: ${message}`, true);
+          } else {
+            const count = payload && typeof payload.count !== 'undefined' ? payload.count : 'n/a';
+            const cached = payload && typeof payload.cached !== 'undefined' ? payload.cached : 'n/a';
+            setStatus(`测试成功: count=${count}, cached=${cached}`, false);
+          }
+        } catch (err) {
+          setStatus(`测试失败: ${err}`, true);
+        } finally {
+          button.disabled = false;
+          button.textContent = original;
+        }
+      });
+    });
+
+    render();
+  })();
+</script>
+{% endblock %}
+
+{% block page_tail_promo %}{% endblock %}

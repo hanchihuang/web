@@ -91,6 +91,43 @@
 
 <section style="margin-bottom: 48px;">
     <div class="section-header">
+        <h2 class="section-title"><span class="icon">🔌</span> API 转接权限</h2>
+    </div>
+    <div style="display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        {% for card in api_relay_cards %}
+        <div class="tool-card">
+            <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">{{ card.service.name }}</h3>
+                <span style="padding: 6px 10px; border-radius: 999px; background: {% if card.approved %}#dcfce7{% else %}#ffedd5{% endif %}; color: {{ card.status_color }}; font-weight: 700;">{{ card.status_label }}</span>
+            </div>
+            <p class="description" style="margin-bottom: 10px;">{{ card.service.description|default:"该服务通过 AI tools 主站统一转接。登录后由管理员后台授权，授权后即可通过本站域名调用。" }}</p>
+            <div style="display: grid; gap: 8px; color: #334155; font-size: 0.95rem;">
+                <div><strong>访问路径：</strong><code>{{ card.public_url_path }}</code></div>
+                <div><strong>请求方法：</strong>{{ card.service.allowed_methods }}</div>
+                <div><strong>登录要求：</strong>{% if card.service.require_login %}需要{% else %}不需要{% endif %}</div>
+                <div><strong>后台审批：</strong>{% if card.service.require_manual_approval %}需要{% else %}不需要{% endif %}</div>
+                {% if card.service.apply_url %}<div><strong>申请说明：</strong><a href="{{ card.service.apply_url }}">{{ card.service.apply_url }}</a></div>{% endif %}
+            </div>
+            {% if card.example_urls %}
+            <div style="margin-top: 12px; padding: 12px; border-radius: 12px; background: #f8fafc;">
+                <div style="font-weight: 700; margin-bottom: 8px;">示例地址</div>
+                {% for example_url in card.example_urls %}
+                <div style="word-break: break-all; color: #0f172a;"><code>{{ example_url }}</code></div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% empty %}
+        <div class="tool-card">
+            <div style="color: #64748b;">当前还没有启用中的 API 转接服务。</div>
+        </div>
+        {% endfor %}
+    </div>
+    <p style="margin-top: 14px; color: #64748b;">后续你买的任何 API，都可以在后台新增一个服务配置，然后按账号发放访问权限。前台统一通过本站域名调用，不需要把上游密钥发给终端用户。</p>
+</section>
+
+<section style="margin-bottom: 48px;">
+    <div class="section-header">
         <h2 class="section-title"><span class="icon">🎙</span> 模型内置 Speaker</h2>
     </div>
     <div style="display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">

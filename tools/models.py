@@ -1,3 +1,7 @@
+import json
+
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
@@ -364,3 +368,266 @@ class TTSCreditLedger(models.Model):
 
     def __str__(self):
         return f'{self.user.username} {self.entry_type} {self.char_delta}'
+
+
+class ApiRelayService(models.Model):
+    """可转接的 API 服务配置"""
+
+    slug = models.SlugField('服务标识', max_length=64, unique=True)
+    name = models.CharField('服务名称', max_length=120)
+    base_url = models.URLField('上游基础地址')
+    is_active = models.BooleanField('是否启用', default=True)
+    require_api_key = models.BooleanField('要求 API Key', default=False)
+    require_login = models.BooleanField('需要登录', default=True)
+    require_manual_approval = models.BooleanField('需要后台授权', default=True)
+    allowed_methods = models.CharField('允许方法', max_length=64, default='GET,POST')
+    timeout_seconds = models.PositiveIntegerField('请求超时（秒）', default=60)
+    upstream_headers = models.TextField('固定上游请求头(JSON)', blank=True, default='')
+    upstream_query_params = models.TextField('固定上游查询参数(JSON)', blank=True, default='')
+    public_path = models.CharField('对外访问路径', max_length=255, blank=True, default='')
+    apply_url = models.CharField('申请/说明页', max_length=255, blank=True, default='')
+    description = models.TextField('服务说明', blank=True, default='')
+    example_paths = models.TextField('示例路径（每行一个）', blank=True, default='')
+    note = models.CharField('备注', max_length=255, blank=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        app_label = 'tools'
+        verbose_name = 'API转接服务'
+        verbose_name_plural = 'API转接服务'
+        ordering = ['name', 'slug']
+
+    def __str__(self):
+        return f'{self.name} ({self.slug})'
+
+    @property
+    def allowed_method_set(self) -> set[str]:
+        return {item.strip().upper() for item in self.allowed_methods.split(',') if item.strip()}
+
+    @property
+    def public_url_path(self) -> str:
+        if self.public_path:
+            return self.public_path.strip()
+        if self.slug == 'tushare':
+            return '/tushare/'
+        return f'/api-relay/{self.slug}/'
+
+    def clean(self):
+        super().clean()
+        for field_name in ('upstream_headers', 'upstream_query_params'):
+            raw_value = (getattr(self, field_name) or '').strip()
+            if not raw_value:
+                continue
+            try:
+                parsed = json.loads(raw_value)
+            except json.JSONDecodeError as exc:
+                raise ValidationError({field_name: f'需要填写合法 JSON 对象: {exc}'})
+            if not isinstance(parsed, dict):
+                raise ValidationError({field_name: '这里只接受 JSON 对象，例如 {"Authorization": "Bearer xxx"}'})
+
+
+class UserApiRelayAccess(models.Model):
+    """用户对 API 转接服务的访问授权"""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_relay_accesses', verbose_name='用户')
+    service = models.ForeignKey(ApiRelayService, on_delete=models.CASCADE, related_name='user_accesses', verbose_name='服务')
+    is_enabled = models.BooleanField('是否已授权', default=False)
+    api_key_prefix = models.CharField('API Key 前缀', max_length=32, unique=True, blank=True, null=True, default=None)
+    api_key_secret_hash = models.CharField('API Key 哈希', max_length=255, blank=True, default='')
+    api_key_last4 = models.CharField('API Key 后四位', max_length=4, blank=True, default='')
+    api_key_created_at = models.DateTimeField('API Key 生成时间', blank=True, null=True)
+    approved_at = models.DateTimeField('授权时间', blank=True, null=True)
+    expires_at = models.DateTimeField('过期时间', blank=True, null=True)
+    note = models.CharField('备注', max_length=255, blank=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        app_label = 'tools'
+        verbose_name = '用户 API 访问授权'
+        verbose_name_plural = '用户 API 访问授权'
+        unique_together = ('user', 'service')
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.user.username} -> {self.service.slug} ({self.is_enabled})'
+
+    @property
+    def has_api_key(self) -> bool:
+        return bool(self.api_key_prefix and self.api_key_secret_hash)
+
+    def issue_api_key(self) -> str:
+        prefix = f'atk_{secrets.token_hex(4)}'
+        secret = secrets.token_urlsafe(24)
+        self.api_key_prefix = prefix
+        self.api_key_secret_hash = make_password(secret)
+        self.api_key_last4 = secret[-4:]
+        self.api_key_created_at = timezone.now()
+        return f'{prefix}.{secret}'
+
+    def revoke_api_key(self):
+        self.api_key_prefix = None
+        self.api_key_secret_hash = ''
+        self.api_key_last4 = ''
+        self.api_key_created_at = None
+
+
+class TardisRagEntry(models.Model):
+    """TARDIS 页面客服语料"""
+
+    title = models.CharField('标题', max_length=120)
+    question_hint = models.CharField('问题提示', max_length=255, blank=True, default='')
+    answer = models.TextField('回答内容')
+    keywords = models.CharField('关键词', max_length=255, blank=True, default='')
+    sort_order = models.PositiveIntegerField('排序', default=100)
+    is_active = models.BooleanField('是否启用', default=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        app_label = 'tools'
+        verbose_name = 'TARDIS 客服语料'
+        verbose_name_plural = 'TARDIS 客服语料'
+        ordering = ['sort_order', '-updated_at', '-id']
+
+    def __str__(self):
+        return self.title
+
+
+class TushareRagEntry(models.Model):
+    """Tushare 页面客服语料"""
+
+    title = models.CharField('标题', max_length=120)
+    question_hint = models.CharField('问题提示', max_length=255, blank=True, default='')
+    answer = models.TextField('回答内容')
+    keywords = models.CharField('关键词', max_length=255, blank=True, default='')
+    sort_order = models.PositiveIntegerField('排序', default=100)
+    is_active = models.BooleanField('是否启用', default=True)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        app_label = 'tools'
+        verbose_name = 'Tushare 客服语料'
+        verbose_name_plural = 'Tushare 客服语料'
+        ordering = ['sort_order', '-updated_at', '-id']
+
+    def __str__(self):
+        return self.title
+
+
+class EdgeInferenceOffer(models.Model):
+    """边缘推理节点/实例供给"""
+
+    class BillingUnit(models.TextChoices):
+        HOUR = 'hour', '按小时'
+        DAY = 'day', '按天'
+        MONTH = 'month', '按月'
+
+    slug = models.SlugField('标识', max_length=64, unique=True)
+    name = models.CharField('名称', max_length=120)
+    provider = models.CharField('提供方', max_length=80, blank=True, default='')
+    gpu_name = models.CharField('GPU 型号', max_length=120)
+    gpu_count = models.PositiveIntegerField('GPU 数量', default=1)
+    vram_gb = models.DecimalField('显存(GB)', max_digits=6, decimal_places=1, default=0)
+    cpu_cores = models.PositiveIntegerField('CPU 核数', default=0)
+    ram_gb = models.PositiveIntegerField('内存(GB)', default=0)
+    disk_gb = models.PositiveIntegerField('磁盘(GB)', default=0)
+    region = models.CharField('区域', max_length=120, blank=True, default='')
+    network_up_mbps = models.PositiveIntegerField('上行(Mbps)', default=0)
+    network_down_mbps = models.PositiveIntegerField('下行(Mbps)', default=0)
+    billing_unit = models.CharField('计费单位', max_length=16, choices=BillingUnit.choices, default=BillingUnit.HOUR)
+    price = models.DecimalField('价格', max_digits=10, decimal_places=2, default=0)
+    min_rental_hours = models.PositiveIntegerField('最短租用时长(小时)', default=1)
+    stock = models.PositiveIntegerField('库存/槽位', default=1)
+    supported_models = models.CharField('支持模型', max_length=255, blank=True, default='')
+    endpoint_protocols = models.CharField('接入协议', max_length=255, blank=True, default='')
+    relay_service = models.ForeignKey(
+        ApiRelayService,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='edge_offers',
+        verbose_name='关联 API 转接服务',
+    )
+    description = models.TextField('说明', blank=True, default='')
+    is_active = models.BooleanField('是否启用', default=True)
+    sort_order = models.PositiveIntegerField('排序', default=100)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        app_label = 'tools'
+        verbose_name = '边缘推理供给'
+        verbose_name_plural = '边缘推理供给'
+        ordering = ['sort_order', 'price', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class EdgeInferenceRequest(models.Model):
+    """边缘推理租用/开通请求"""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', '待处理'
+        APPROVED = 'approved', '已通过'
+        ACTIVE = 'active', '运行中'
+        COMPLETED = 'completed', '已结束'
+        REJECTED = 'rejected', '已拒绝'
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='edge_inference_requests', verbose_name='用户')
+    offer = models.ForeignKey(EdgeInferenceOffer, on_delete=models.SET_NULL, null=True, blank=True, related_name='requests', verbose_name='供给')
+    contact_name = models.CharField('联系人', max_length=80)
+    email = models.EmailField('邮箱')
+    wechat = models.CharField('微信/Telegram', max_length=80, blank=True, default='')
+    requested_model = models.CharField('目标模型/镜像', max_length=255, blank=True, default='')
+    use_case = models.TextField('用途说明')
+    expected_concurrency = models.PositiveIntegerField('预期并发', default=1)
+    expected_hours = models.PositiveIntegerField('预期时长(小时)', default=1)
+    budget = models.DecimalField('预算', max_digits=10, decimal_places=2, default=0)
+    status = models.CharField('状态', max_length=24, choices=Status.choices, default=Status.PENDING)
+    public_endpoint = models.CharField('推理入口', max_length=255, blank=True, default='')
+    api_key_prefix = models.CharField('访问 Key 前缀', max_length=32, unique=True, blank=True, null=True, default=None)
+    api_key_secret_hash = models.CharField('访问 Key 哈希', max_length=255, blank=True, default='')
+    api_key_last4 = models.CharField('访问 Key 后四位', max_length=4, blank=True, default='')
+    api_key_created_at = models.DateTimeField('访问 Key 生成时间', blank=True, null=True)
+    ssh_host = models.CharField('SSH Host', max_length=120, blank=True, default='')
+    ssh_port = models.PositiveIntegerField('SSH Port', default=22)
+    ssh_username = models.CharField('SSH 用户名', max_length=64, blank=True, default='')
+    access_note = models.TextField('访问说明', blank=True, default='')
+    activated_at = models.DateTimeField('开通时间', blank=True, null=True)
+    expires_at = models.DateTimeField('到期时间', blank=True, null=True)
+    admin_note = models.TextField('后台备注', blank=True, default='')
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        app_label = 'tools'
+        verbose_name = '边缘推理请求'
+        verbose_name_plural = '边缘推理请求'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.contact_name} - {self.requested_model or self.offer_id or "edge"}'
+
+    @property
+    def has_access_key(self) -> bool:
+        return bool(self.api_key_prefix and self.api_key_secret_hash)
+
+    def issue_access_key(self) -> str:
+        prefix = f'eik_{secrets.token_hex(4)}'
+        secret = secrets.token_urlsafe(24)
+        self.api_key_prefix = prefix
+        self.api_key_secret_hash = make_password(secret)
+        self.api_key_last4 = secret[-4:]
+        self.api_key_created_at = timezone.now()
+        return f'{prefix}.{secret}'
+
+    def apply_relay_access(self, access: UserApiRelayAccess):
+        self.public_endpoint = f'https://ai-tool.indevs.in{access.service.public_url_path}'
+        self.api_key_prefix = access.api_key_prefix
+        self.api_key_secret_hash = access.api_key_secret_hash
+        self.api_key_last4 = access.api_key_last4
+        self.api_key_created_at = access.api_key_created_at

@@ -80,6 +80,12 @@
             <span id="tts-cancel-message" style="margin-left: 12px; color: #991b1b;"></span>
         </div>
         {% endif %}
+        {% if can_regenerate %}
+        <div style="margin-top: 16px;">
+            <button id="tts-regenerate-btn" type="button" class="nav-cta" style="border: none; cursor: pointer; background: #1d4ed8;">重新生成</button>
+            <span id="tts-regenerate-message" style="margin-left: 12px; color: #1e3a8a;"></span>
+        </div>
+        {% endif %}
         <div id="tts-processing-log" style="margin-top: 12px; color: #475569; font-size: 0.95rem;">{{ order.processing_log }}</div>
     </div>
 </section>
@@ -125,7 +131,7 @@
         {% if order.is_output_expired %}
         <p style="color: #b91c1c;">该音频已超过 3 小时保留期，文件已自动清除。</p>
         {% else %}
-        <p><a href="{{ order.output_file.url }}" target="_blank">下载音频</a></p>
+        <p><a href="{% url 'tts_download_order_output' order.order_no %}?email={{ order.email|urlencode }}" target="_blank">下载音频</a></p>
         <p style="color: #b45309; margin-top: 10px;">请及时下载，音频将在 {{ order.output_expires_at|date:"Y-m-d H:i" }} 自动清除，本地文件也会同步删除。</p>
         {% endif %}
     </div>
@@ -149,6 +155,9 @@
         const cancelButton = document.getElementById('tts-cancel-btn');
         const cancelMessage = document.getElementById('tts-cancel-message');
         const cancelUrl = "{% url 'tts_cancel_order' order.order_no %}";
+        const regenerateButton = document.getElementById('tts-regenerate-btn');
+        const regenerateMessage = document.getElementById('tts-regenerate-message');
+        const regenerateUrl = "{% url 'tts_regenerate_order' order.order_no %}";
 
         function applyStatus(data) {
             if (!data.ok) return;
@@ -200,6 +209,29 @@
                     cancelButton.disabled = false;
                 }
                 poll();
+            });
+        }
+
+        if (regenerateButton) {
+            regenerateButton.addEventListener('click', async function () {
+                regenerateButton.disabled = true;
+                regenerateMessage.textContent = '正在创建重新生成订单...';
+                const response = await fetch(regenerateUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    },
+                    body: 'email={{ order.email|urlencode }}'
+                });
+                const data = await response.json();
+                regenerateMessage.textContent = data.message || '重新生成失败';
+                if (data.ok && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                    return;
+                }
+                regenerateButton.disabled = false;
             });
         }
     }());
