@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}Tushare Pro 可下载数据权限 | 量化资源专栏{% endblock %}
-{% block meta_description %}Tushare Pro 可下载数据权限说明：互动易问答、筹码分布、股票、融资融券、新闻、期货、期权、港股、美股、外汇、全球指数、主连、指数、ETF 与部分其他类型数据。{% endblock %}
+{% block meta_description %}Tushare Pro 可下载数据权限说明：分钟 latest、互动易问答、筹码分布、股票、融资融券、新闻、公告、期货、期权、港股、美股、外汇、全球指数、主连/连续合约、指数、ETF、板块与部分其他类型数据。{% endblock %}
 
 {% block content %}
 <div style="margin-bottom: 20px;">
@@ -132,18 +132,20 @@
     <h2 style="margin:14px 0 8px; font-size:1.7rem; color:#1e3a8a;">直接问这篇 Tushare 指南</h2>
     <p style="margin:0; color:#1d4ed8; line-height:1.8;">它会根据本文内容和超级管理员后续录入的历史知识库智能回答，适合问各种问题。</p>
   </div>
-  <div id="tushare-rag-chat" class="ts-rag-chat">
+    <div id="tushare-rag-chat" class="ts-rag-chat">
     <div class="ts-rag-msg bot">可以直接问我：
 1. Tushare 现在怎么开通？
 2. 分钟数据能不能通过站内接口拿？
 3. 都支持哪些数据？
-4. 交付给我什么凭证？</div>
+4. 目录新增了哪些分类？
+5. 交付给我什么凭证？</div>
   </div>
   <div class="ts-rag-foot">
     <div class="ts-rag-quick">
       <button type="button" data-question="Tushare 现在怎么开通？">怎么开通</button>
       <button type="button" data-question="分钟数据能不能通过站内接口拿？">分钟数据能不能拿</button>
       <button type="button" data-question="Tushare 都支持哪些数据？">支持哪些数据</button>
+      <button type="button" data-question="Tushare 目录新增了哪些分类？">目录新增分类</button>
       <button type="button" data-question="交付给我什么凭证？">交付什么</button>
     </div>
     <form id="tushare-rag-form" class="ts-rag-form">
@@ -158,7 +160,10 @@
   <header style="border-bottom:1px solid #e5e7eb; padding-bottom:18px; margin-bottom:22px;">
     <p style="display:inline-block; background:#eff6ff; color:#1d4ed8; border-radius:999px; padding:6px 12px; font-size:.85rem; font-weight:600;">量化资源专栏 · A 股与跨市场数据</p>
     <h1 style="font-size:2rem; line-height:1.35; color:#111827; margin:12px 0 10px;">Tushare Pro 可下载数据权限</h1>
-    <p style="margin:0; color:#6b7280;">这个页面现在改成 API Key 模式说明页。网页登录拿 Tushare 数据权限的方式已取消。站内 replay 目前以分钟数据以外的接口为主，只有超级管理员生成并发放的 API Key 才能访问 <code>/tushare/</code> 下的非分钟数据；不同数据类型会按频率和查询参数自适应保留周期。当前销售口径到期日为 <strong>2026-12-29</strong>。</p>
+    <p style="margin:0; color:#6b7280;">这个页面现在改成 API Key 模式说明页。网页登录拿 Tushare 数据权限的方式已取消。站内 replay 目前仍以非分钟数据为主，但分钟线已扩成两块：A 股支持 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>、<code>60MIN latest</code>，国内期货连续/主力符号支持 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code> 这四档 latest；当前对外口径统一按“最近一根已闭合且满足新鲜度要求的结果”解释，不再把进行中的周期或明显过旧的周期冒充成实时。当前销售口径到期日为 <strong>2026-12-29</strong>。</p>
+    <div style="margin-top:16px; padding:14px 16px; border-radius:14px; background:#fef3c7; border:1px solid #f59e0b; color:#92400e; font-weight:800; font-size:1rem;">
+      Tushare 购买链接在本页面左下角。
+    </div>
   </header>
 
   <section style="line-height:1.95; color:#1f2937; font-size:1.05rem;">
@@ -168,7 +173,7 @@
       Tushare 更适合拿 A 股、新闻、全球指数和跨市场补充数据，不喧宾夺主。
     </div>
 
-    <h2 style="font-size:1.35rem; color:#111827; margin:20px 0 10px;">一、只支持 API Key，且当前只开放非分钟数据</h2>
+    <h2 style="font-size:1.35rem; color:#111827; margin:20px 0 10px;">一、只支持 API Key，分钟 replay 分成 A 股与期货两类</h2>
     <div style="border:1px solid #dbeafe; border-radius:18px; padding:20px; background:linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%); margin-bottom:22px;">
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; align-items:start;">
         <div style="padding:16px; border-radius:14px; background:#ffffff; border:1px solid #bfdbfe;">
@@ -178,7 +183,10 @@
             <li>超级管理员手工生成并发放站内 replay API Key。</li>
             <li>交付默认分成两类凭证：1 个原生 Tushare token，1 个站内 replay API Key。</li>
             <li>请求站内 replay 时必须携带正确的 <code>X-API-Key</code>，否则无法访问 <code>{{ tushare_example_url }}</code>。</li>
-            <li>当前 replay key 范围只包含分钟数据以外的接口，例如 <code>/daily/*</code>、<code>/news*</code>、<code>/status</code>、<code>/symbols</code>、<code>/health</code>、<code>/pro/&lt;api_name&gt;</code>。</li>
+            <li>当前 replay key 仍以分钟数据以外的接口为主，例如 <code>/daily/*</code>、<code>/news*</code>、<code>/pro/news</code>、<code>/pro/major_news</code>、<code>/pro/express_news</code>、<code>/pro/anns_d</code>、<code>/status</code>、<code>/symbols</code>、<code>/health</code>、<code>/pro/&lt;api_name&gt;</code>。</li>
+            <li>A 股分钟 replay 入口：<code>{{ tushare_minute_example_url }}</code>，支持 A 股代码与 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>、<code>60MIN</code>。</li>
+            <li>期货分钟 replay 入口：<code>{{ tushare_futures_minute_example_url }}</code>，支持国内期货连续/主力符号与 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>。</li>
+            <li>期货具体合约也支持直接请求，例如：<code>{{ tushare_futures_contract_minute_example_url }}</code>。</li>
           </ol>
           <div style="margin-top:14px; padding:12px 14px; border-radius:12px; background:#eff6ff; color:#1e3a8a; font-size:.95rem;">
             示例地址：<code>{{ tushare_example_url }}</code>
@@ -190,10 +198,12 @@
             <div style="padding:14px; border-radius:12px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; line-height:1.8;">
               <strong>网页登录取消：</strong>这个页面不再提供注册框或登录框来开通 Tushare 数据权限。<br>
               <strong>只有 API Key 生效：</strong>接口请求必须带正确的 API Key，且该 Key 对应的权限记录已开通、未过期，才能取数。<br>
-              <strong>分钟数据边界：</strong>当前站内 replay 不开放 <code>/tushare/minute/*</code>。A 股分钟和期货分钟如需下载，仍应走原生 Tushare token，并遵守单个 API 每分钟最多约 2 次的原生限频。<br>
+              <strong>分钟数据边界：</strong>当前站内 replay 的分钟线入口统一为 <code>/tushare/minute/&lt;symbol&gt;/latest</code>。其中 A 股开放 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>、<code>60MIN</code>，国内期货连续/主力符号以及常见具体合约写法开放 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>；其他分钟类接口仍不在本次 relay 范围内。<br>
               <strong>其他 Tushare Pro 数据：</strong>可通过 <code>/tushare/pro/&lt;api_name&gt;</code> 访问互动易、筹码分布、股票、融资融券、新闻、期货、期权、港股、美股、外汇、全球指数、主连/连续合约、指数、ETF、部分其他类型等非分钟数据；完整目录和示例参数可查 <a href="{% url 'quant_tushare_catalog' %}" style="color:#9a3412; font-weight:700; text-decoration:none;">前端目录页</a>，JSON 目录接口仍为 <code>/tushare/pro/catalog</code>。<br>
-              <strong>保存周期自适应：</strong>数据会先保存到本地持久化存储，不依赖纯内存缓存；新闻通常保留约 15 分钟，日频类通常保留到北京时间当日 24:00，历史日期查询通常保留 3 到 7 天，基础资料类通常保留 7 天，交易日历类通常保留 30 天。<br>
-              <strong>转接层能力边界：</strong>站内 replay 面向实时数据、日频数据和历史批量下载，不包含分钟数据；分钟类速率限制仍以原生 Tushare token 为准。<br>
+              <strong>周期语义统一：</strong>凡是 replay 里的周期类接口，<code>latest</code> 默认都按 <code>latest_completed</code> 解释，也就是“最近一根已闭合周期结果”；如果当前周期尚未闭合，系统不会把进行中的 bar 冒充成完整高开低收。<br>
+              <strong>非周期类 /pro 口径：</strong>板块、成分、基本面、映射、新闻列表、交易日历这类 <code>/pro</code> 接口不会强行压成最后一条，而是继续返回完整列表；其中如果语义上仍属于“当前口径”查询，比如当日快照、覆盖最新交易日的日频列表，会额外做 freshness 审查，拿不到符合口径的结果时优先返回 503。<br>
+              <strong>保存与新鲜度自适应：</strong>数据会先保存到本地持久化存储，不依赖纯内存缓存；但是否返回给顾客，不只看 TTL，还要看内容时间戳是否达到“当前应有口径”。当前口径不达标时会强制回源，回源后仍不达标就返回 503，而不是吐出几天前或上一周期的旧值。普通新闻接口如 <code>/pro/news</code> 通常保留约 1 小时，<code>/pro/major_news</code> 当前保留 1 天，<code>/pro/express_news</code> 当前保留约 15 分钟，公告接口如 <code>/pro/anns_d</code> 通常按公告日维度保留 3 到 7 天，基础资料类通常保留 7 天，交易日历类通常保留 30 天；非周期类历史查询才会保留更久。<br>
+              <strong>转接层能力边界：</strong>站内 replay 面向实时数据、日频数据和历史批量下载；分钟类里目前放开 A 股 <code>1/5/15/30/60MIN latest</code> 与国内期货连续/主力符号 <code>1/5/15/30MIN latest</code>，不等于绕开上游原生权限边界。<br>
               <strong>没有权限就拿不到：</strong>Key 错误、Key 未授权、Key 过期，都会直接返回 401/403。
             </div>
           </div>
@@ -201,12 +211,64 @@
             <div style="font-weight:800; color:#0f172a; margin-bottom:10px;">请求示例</div>
             <pre style="margin:0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#0f172a; color:#e2e8f0; line-height:1.8; overflow:auto;"><code>{{ tushare_example_curl }}</code></pre>
             <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#0f172a; color:#e2e8f0; line-height:1.8; overflow:auto;"><code>curl -G -H "X-API-Key: &lt;your-api-key&gt;" --data-urlencode "ts_code=000002.SZ" https://ai-tool.indevs.in/tushare/pro/daily_basic</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#111827; color:#dbeafe; line-height:1.8; overflow:auto;"><code>{{ tushare_express_news_example_python }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#111827; color:#dbeafe; line-height:1.8; overflow:auto;"><code>{{ tushare_major_news_example_python }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#0f172a; color:#e2e8f0; line-height:1.8; overflow:auto;"><code>{{ tushare_minute_example_curl }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#111827; color:#dbeafe; line-height:1.8; overflow:auto;"><code>{{ tushare_minute_example_python }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#0f172a; color:#e2e8f0; line-height:1.8; overflow:auto;"><code>{{ tushare_minute_60_example_curl }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#111827; color:#dbeafe; line-height:1.8; overflow:auto;"><code>{{ tushare_minute_60_example_python }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#0f172a; color:#e2e8f0; line-height:1.8; overflow:auto;"><code>{{ tushare_futures_minute_example_curl }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#111827; color:#dbeafe; line-height:1.8; overflow:auto;"><code>{{ tushare_futures_minute_example_python }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#0f172a; color:#e2e8f0; line-height:1.8; overflow:auto;"><code>{{ tushare_futures_contract_minute_example_curl }}</code></pre>
+            <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:12px; background:#111827; color:#dbeafe; line-height:1.8; overflow:auto;"><code>{{ tushare_futures_contract_minute_example_python }}</code></pre>
           </div>
         </div>
       </div>
     </div>
 
+    <div style="margin:0 0 22px; padding:18px; border-radius:18px; background:linear-gradient(135deg, #fefce8 0%, #fff7ed 100%); border:1px solid #f59e0b; box-shadow:0 12px 30px rgba(245,158,11,.12);">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        <div style="font-size:1.08rem; font-weight:900; color:#7c2d12;">A 股分钟 latest 快速示例</div>
+        <div style="padding:6px 10px; border-radius:999px; background:#111827; color:#f8fafc; font-weight:800; font-size:.88rem;">新增能力</div>
+      </div>
+      <div style="color:#7c2d12; line-height:1.85; margin-bottom:12px;">
+        A 股分钟现在直接支持 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>、<code>60MIN</code>。这里给你两个能直接复制的例子。
+      </div>
+      <pre style="margin:0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:14px; background:#111827; color:#f9fafb; line-height:1.85; overflow:auto;"><code>{{ tushare_minute_example_curl }}</code></pre>
+      <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:14px; background:#111827; color:#f9fafb; line-height:1.85; overflow:auto;"><code>{{ tushare_minute_60_example_curl }}</code></pre>
+    </div>
+
+    <div style="margin:0 0 22px; padding:18px; border-radius:18px; background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border:1px solid #334155; box-shadow:0 12px 30px rgba(15,23,42,.18);">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        <div style="font-size:1.08rem; font-weight:900; color:#f8fafc;">国内期货连续 / 主力符号分钟 latest 快速示例</div>
+        <div style="padding:6px 10px; border-radius:999px; background:#f59e0b; color:#111827; font-weight:800; font-size:.88rem;">显眼入口</div>
+      </div>
+      <div style="color:#cbd5e1; line-height:1.85; margin-bottom:12px;">
+        这一块专门给国内期货分钟 latest。连续 / 主力符号可以直接用 <code style="color:#fde68a;">RB0</code>、<code style="color:#fde68a;">IF0</code>、<code style="color:#fde68a;">AU0</code>，品种代码也可直接写成 <code style="color:#fde68a;">RB</code> 这类简写，具体合约支持 <code style="color:#fde68a;">CU2605.SHFE</code> 这种全后缀写法。请求频度支持 <code style="color:#bfdbfe;">1MIN</code>、<code style="color:#bfdbfe;">5MIN</code>、<code style="color:#bfdbfe;">15MIN</code>、<code style="color:#bfdbfe;">30MIN</code>。
+      </div>
+      <pre style="margin:0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:14px; background:#020617; color:#e2e8f0; line-height:1.85; overflow:auto;"><code>{{ tushare_futures_minute_example_curl }}</code></pre>
+      <pre style="margin:12px 0 0; white-space:pre-wrap; word-break:break-word; padding:14px; border-radius:14px; background:#0b1120; color:#dbeafe; line-height:1.85; overflow:auto;"><code>{{ tushare_futures_minute_example_python }}</code></pre>
+      <div style="margin-top:12px; color:#94a3b8; font-size:.95rem;">具体合约示例：<code style="color:#f8fafc;">{{ tushare_futures_contract_minute_example_url }}</code>；品种代码示例：<code style="color:#f8fafc;">/tushare/minute/RB/latest?freq=1MIN</code></div>
+    </div>
+
     <h2 style="font-size:1.35rem; color:#111827; margin:20px 0 10px;">二、可下载数据范围</h2>
+    <div style="margin-bottom:16px; padding:16px 18px; border-radius:16px; background:linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border:1px solid #e2e8f0;">
+      <div style="font-weight:800; color:#0f172a; margin-bottom:10px;">guide 已按 catalog 新目录同步</div>
+      <div style="color:#475569; line-height:1.85;">
+        当前 guide 不再只写“大类概述”，而是按 catalog 的实际分类来理解覆盖范围。除了分钟 latest 入口，站内现在主要按
+        <code>ETF数据</code>、<code>主连/连续合约数据</code>、<code>互动易问答（沪深）</code>、<code>全球指数数据</code>、<code>外汇数据</code>、
+        <code>指数数据</code>、<code>新闻数据</code>、<code>期权数据</code>、<code>期货数据</code>、<code>板块数据</code>、
+        <code>港股数据</code>、<code>筹码分布</code>、<code>美股数据</code>、<code>股票</code>、<code>融资融券基础数据</code>、
+        <code>公告数据</code> 与 <code>部分其他类型数据</code> 来组织。
+      </div>
+      {% if tushare_catalog_category_names %}
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:14px;">
+        {% for category_name in tushare_catalog_category_names %}
+        <span style="display:inline-flex; align-items:center; border:1px solid #cbd5e1; border-radius:999px; padding:7px 12px; background:#fff; color:#334155; font-size:.92rem;">{{ category_name }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px;">
       <div style="border:1px solid #e2e8f0; border-radius:14px; padding:16px; background:#fff;">
         <p style="margin:0; font-weight:700; color:#0f172a;">A 股与舆情</p>
@@ -217,6 +279,9 @@
           <li>融资融券基础数据</li>
           <li>新闻数据</li>
           <li>ETF 数据</li>
+          <li>概念板块数据（如 <code>concept</code>、<code>concept_detail</code>）</li>
+          <li>行业板块数据（如 <code>index_classify</code>、<code>index_member</code>）</li>
+          <li>公告数据（如 <code>anns_d</code>）</li>
         </ul>
       </div>
       <div style="border:1px solid #e2e8f0; border-radius:14px; padding:16px; background:#fff;">
@@ -225,6 +290,8 @@
           <li>期货数据</li>
           <li>期权数据</li>
           <li>主连 / 连续合约数据</li>
+          <li>主连映射 / 合约映射（如 <code>fut_mapping</code>）</li>
+          <li>结算参考数据（如 <code>fut_settle</code>）</li>
         </ul>
       </div>
       <div style="border:1px solid #e2e8f0; border-radius:14px; padding:16px; background:#fff;">
@@ -235,12 +302,26 @@
           <li>外汇数据</li>
           <li>全球指数数据</li>
           <li>指数数据</li>
-          <li>部分其他类型数据</li>
+          <li>部分其他类型数据（如交易日历、基础资料、映射类接口）</li>
         </ul>
       </div>
     </div>
 
+    <div style="margin-top:16px; padding:16px 18px; border-radius:16px; background:#f8fafc; border:1px solid #e2e8f0;">
+      <div style="font-weight:800; color:#0f172a; margin-bottom:10px;">本次补齐的新增口径</div>
+      <ul style="padding-left:20px; margin:0; color:#334155; line-height:1.9;">
+        <li><strong>公告数据</strong> 已单独作为目录分类，不再只是“新闻”里的顺手补充，当前代表接口是 <code>anns_d</code>。</li>
+        <li><strong>主连/连续合约数据</strong> 与 <strong>期货数据</strong> 已拆开理解；如果你问的是主连映射或合约映射，重点看 <code>fut_mapping</code> 这类接口。</li>
+        <li><strong>互动易问答（沪深）</strong> 现在明确作为事件驱动披露流看待，更接近新闻延伸，而不只是静态问答库。</li>
+        <li><strong>部分其他类型数据</strong> 里已经覆盖交易日历、休市安排、基础资料和部分映射类查询，不应该再被笼统归到“其他”一笔带过。</li>
+        <li><strong>非周期类 /pro</strong> 现在要按“完整列表 + freshness 审查”理解，板块、成分、基本面、映射、新闻列表、交易日历都属于这套口径。</li>
+      </ul>
+    </div>
+
     <h2 style="font-size:1.35rem; color:#111827; margin:24px 0 10px;">三、站内可用目录与示例参数</h2>
+    <div style="margin-bottom:16px; padding:14px 16px; border-radius:14px; background:#ecfeff; border:1px solid #a5f3fc; color:#155e75;">
+      <strong>周期类和非周期类请分开理解：</strong>日线、分钟线这类周期接口默认只返回最近一根已闭合且新鲜度达标的 bar；如果当前周期尚未闭合或拿到的结果明显过旧，就会返回 503。像板块、基本面、成分、映射、新闻列表这类非周期接口，不适用“last bar”语义，而是做当前口径 freshness 审查。
+    </div>
     {% if tushare_catalog.categories %}
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;">
         {% for category, items in tushare_catalog.examples.items %}
@@ -266,9 +347,14 @@
     <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px 18px;">
       <ul style="padding-left:20px; margin:0;">
         <li>主连分钟直下：不算直接支持，通常需要先做 `mapping`，再映射到实际合约分钟数据。</li>
-        <li>当前网站 replay 仍然只开放分钟数据以外的接口；分钟类 API 不在站内 replay 权限范围内，需走原生 Tushare token。</li>
+        <li>当前网站 replay 在分钟类里支持 A 股 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN</code>、<code>60MIN latest</code>，以及国内期货连续/主力符号和常见具体合约写法的 <code>1MIN</code>、<code>5MIN</code>、<code>15MIN</code>、<code>30MIN latest</code>。</li>
+        <li>板块数据现在已单独纳入 replay 目录分类，可直接按 Tushare 自带接口来拿，例如 <code>/tushare/pro/concept</code>、<code>/tushare/pro/concept_detail</code>、<code>/tushare/pro/index_classify</code>、<code>/tushare/pro/index_member</code>。</li>
+        <li>公告数据现在也已单独纳入 replay 目录分类，代表接口是 <code>/tushare/pro/anns_d</code>；盘后和晚间公告集中披露时最值得刷新。</li>
+        <li>主连/连续合约相关目录已经拆出单独分类；如果你需要主连映射或切换到实际合约，可优先看 <code>/tushare/pro/fut_mapping</code> 这一类接口。</li>
+        <li>部分其他类型数据里已明确包含交易日历、休市安排、基础资料和部分映射接口，不建议再按“可能有，也可能没有”去理解。</li>
+        <li>上面说的“板块数据”是 Tushare 自带板块口径，不等于同花顺板块；如果你问的是 <code>ths_index</code>、<code>ths_member</code>，那要看原生 token 是否具备单独权限。</li>
         <li>不同数据类型会按频率和查询参数自适应保留周期，不再一刀切使用同一种时效；机器重启后仍可继续读取未过期数据。</li>
-        <li>交付默认包含 2 类凭证：1 个原生 Tushare token；1 个站内 replay API Key。站内 replay 背后可对接多 token 轮换以缓解部分实时、日频与历史接口的速率限制，但不把分钟数据包装成站内 replay。</li>
+        <li>交付默认包含 2 类凭证：1 个原生 Tushare token；1 个站内 replay API Key。页面这里说的是站内 replay 已包装好的分钟入口，不额外暴露底层抓取实现。</li>
         <li>当前销售口径到期日为 <strong>2026-12-29</strong>，页面展示的是站内 replay 能力边界，不等于绕开上游所有原生限频。</li>
       </ul>
     </div>
